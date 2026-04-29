@@ -92,42 +92,42 @@ class ExportController extends Controller
     }
 
     public function download(Request $request)
-{
-    /** @var \App\Models\User $user */
-    $user    = Auth::user();
-    $isAdmin = $user->hasRole([
-        'Admin',
-        'Tim Monitoring',
-        'Penanggung Jawab',
-        'Pengendali Mutu',
-        'Pengendali Teknis'
-    ]);
+    {
+        /** @var \App\Models\User $user */
+        $user    = Auth::user();
+        $isAdmin = $user->hasRole([
+            'Admin',
+            'Tim Monitoring',
+            'Penanggung Jawab',
+            'Pengendali Mutu',
+            'Pengendali Teknis'
+        ]);
 
-    $jenis = $request->get('jenis', 'tindaklanjut');
+        $jenis = $request->input('jenis', 'tindaklanjut');
 
-    if ($jenis === 'keputusan') {
-        return $this->exportKeputusanExcel($request, $user, $isAdmin);
+        if ($jenis === 'keputusan') {
+            return $this->exportKeputusan($request, $user, $isAdmin);
+        }
+
+        return $this->exportTindakLanjutExcel($request, $user, $isAdmin);
     }
 
-    return $this->exportTindakLanjutExcel($request, $user, $isAdmin);
-}
+    private function exportTindakLanjutExcel($request, $user, $isAdmin)
+    {
+        $query = TindakLanjut::with([
+            'arahan.keputusan',
+            'arahan.unitKerja',
+            'unitKerja',
+            'creator',
+            'approvals.approver',
+        ]);
 
-private function exportTindakLanjutExcel($request, $user, $isAdmin)
-{
-    $query = TindakLanjut::with([
-        'arahan.keputusan',
-        'arahan.unitKerja',
-        'unitKerja',
-        'creator',
-        'approvals.approver',
-    ]);
+        $data = $query->latest()->get();
+        $roleName = $user->getRoleNames()->first();
+        $filename = 'tindaklanjut_' . str_replace(' ', '_', $roleName) . '_' . now()->format('Ymd_His') . '.xlsx';
 
-    $data = $query->latest()->get();
-    $roleName = $user->getRoleNames()->first();
-    $filename = 'tindaklanjut_' . str_replace(' ', '_', $roleName) . '_' . now()->format('Ymd_His') . '.xlsx';
-
-    return Excel::download(new TindakLanjutExport($data, $isAdmin, $user), $filename);
-}
+        return Excel::download(new TindakLanjutExport($data, $isAdmin, $user), $filename);
+    }
 
     private function exportTindakLanjut($request, $user, $isAdmin)
     {
@@ -202,7 +202,7 @@ private function exportTindakLanjutExcel($request, $user, $isAdmin)
                 ]);
             } elseif ($user->hasRole('Atasan Auditi')) {
                 fputcsv($file, [
-                   'Periode Keputusan',
+                    'Periode Keputusan',
                     'Unit Kerja',
                     'Arahan/Strategi',
                     'Bulan/Tahun Laporan',
@@ -214,7 +214,7 @@ private function exportTindakLanjutExcel($request, $user, $isAdmin)
                 ]);
             } else {
                 fputcsv($file, [
-                   'Periode Keputusan',
+                    'Periode Keputusan',
                     'Arahan/Strategi',
                     'Bulan/Tahun Laporan',
                     'Uraian Tindak Lanjut',

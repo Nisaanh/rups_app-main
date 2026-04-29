@@ -1,52 +1,53 @@
 <x-app-layout>
     <div class="space-y-6">
-
-        {{-- Header Card + Informasi Arahan (Digabung) --}}
         <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-            <div class="p-6 bg-gradient-to-r from-slate-900 to-slate-800">
-                <div class="flex flex-col gap-3">
-                    <div class="flex flex-wrap items-center gap-2">
-                        {{-- Badge Bidang --}}
-                        <span class="px-3 py-1 bg-white/20 text-white rounded-lg text-xs font-bold uppercase tracking-wider">
-                            {{ $arahan->bidang->name ?? '-' }}
-                        </span>
+    {{-- Header Section --}}
+    <div class="p-6 bg-gradient-to-r from-slate-900 to-slate-800">
+        <div class="flex flex-col gap-4">
+            <div class="flex flex-wrap items-center gap-3">
+                {{-- Badge Bidang: Dibuat sangat kecil & ringkas --}}
+                <span class="px-2 py-0.5 bg-white/10 text-white/90 rounded-md text-[10px] font-bold uppercase tracking-widest border border-white/10">
+                    {{ $arahan->bidang->name ?? '-' }}
+                </span>
 
-                        {{-- Badge Target --}}
-                        <span class="px-3 py-1 bg-white/10 text-white/80 rounded-lg text-xs font-medium">
-                            Target: <span class="text-white font-bold">{{ $arahan->tanggal_target ? $arahan->tanggal_target->format('d M Y') : '-' }}</span>
-                        </span>
-                    </div>
-
-                    {{-- Ukuran Judul: text-xl (Proporsional) --}}
-                    <h1 class="text-xl md:text-2xl font-bold text-white leading-snug">
-                        {{ $arahan->strategi }}
-                    </h1>
-                </div>
+                {{-- Badge Target: Dibuat lebih tipis --}}
+                <span class="text-[10px] text-white/60 font-medium tracking-wide">
+                    Target: <span class="text-white/90 font-bold ml-1">{{ $arahan->tanggal_target ? $arahan->tanggal_target->format('d M Y') : '-' }}</span>
+                </span>
             </div>
 
-            {{-- Konten: Putih Bersih --}}
-            <div class="p-6 bg-white">
-                <div class="flex flex-col gap-3">
-                    <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest">Unit Kerja / PIC</h3>
+            
+           <p class="text-m font-medium text-white/90 leading-relaxed">
+                {{ $arahan->strategi }}
+            </p>
+        </div>
+    </div>
 
-                    <div class="flex flex-wrap gap-2">
-                        @forelse($arahan->pics as $pic)
-                        <div class="inline-flex items-center gap-2.5 px-3 py-2 bg-slate-50 border border-slate-100 rounded-xl transition-all hover:bg-slate-100">
-                            {{-- Avatar: Biru --}}
-                            <div class="w-7 h-7 bg-blue-600 rounded-lg flex items-center justify-center text-white text-[11px] font-black">
-                                {{ substr($pic->name, 0, 1) }}
-                            </div>
-                            <span class="text-sm font-bold text-slate-700">
-                                {{ $pic->name }}
-                            </span>
-                        </div>
-                        @empty
-                        <span class="text-sm text-slate-400 italic">Belum ada PIC</span>
-                        @endforelse
+    {{-- PIC Section --}}
+    <div class="px-6 py-4 bg-white">
+        <div class="flex flex-col gap-3">
+            {{-- Label: Sangat kecil --}}
+            <h3 class="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">PIC Terkait</h3>
+
+            <div class="flex flex-wrap gap-2">
+                @forelse($arahan->pics as $pic)
+                <div class="inline-flex items-center gap-2 px-2.5 py-1.5 bg-slate-50 border border-slate-100 rounded-lg">
+                    {{-- Avatar: Diperkecil (w-5 h-5) --}}
+                    <div class="w-5 h-5 bg-slate-200 rounded flex items-center justify-center text-slate-600 text-[9px] font-black">
+                        {{ strtoupper(substr($pic->name, 0, 1)) }}
                     </div>
+                    {{-- Nama PIC: Diperkecil ke text-xs --}}
+                    <span class="text-xs font-bold text-slate-600 tracking-tight">
+                        {{ $pic->name }}
+                    </span>
                 </div>
+                @empty
+                <span class="text-[11px] text-slate-400 italic">Belum ada PIC</span>
+                @endforelse
             </div>
         </div>
+    </div>
+</div>
 
         {{-- TABEL DAFTAR UNIT KERJA --}}
         <div class="bg-white rounded-[2rem] shadow-sm border border-slate-100 overflow-hidden">

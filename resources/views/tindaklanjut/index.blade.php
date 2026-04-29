@@ -31,7 +31,7 @@
                 <div class="p-6 bg-gradient-to-br from-blue-50/30 to-white">
                     <div class="flex items-center justify-between">
                         <div>
-                            <p class="text-[10px] font-black text-blue-600 uppercase tracking-widest">In Approval</p>
+                            <p class="text-[10px] font-black text-blue-600 uppercase tracking-widest">Belum Selesai</p>
                             <p class="text-3xl font-black text-blue-600 mt-1">{{ $stats['in_approval'] ?? 0 }}</p>
                         </div>
                         <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
@@ -172,7 +172,12 @@
                             <td class="px-6 py-4">
                                 <div class="max-w-md">
                                     <p class="font-bold text-slate-800 text-sm leading-snug group-hover:text-blue-600 transition">
-                                        {{ $item->strategi ?? $item->arahan ?? '-' }}
+
+                                        @php
+                                        $text = $item->strategi ?? $item->arahan ?? '-';
+                                        $maxLength = 100; // Batas maksimal karakter
+                                        @endphp
+                                        {{ strlen($text) > $maxLength ? Str::limit($text, $maxLength) : $text }}
                                     </p>
                                 </div>
                             </td>

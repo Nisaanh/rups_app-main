@@ -13,9 +13,9 @@
                     @elseif(request()->routeIs('approval.*'))
                     Persetujuan (Approval)
                     @elseif(request()->routeIs('users.*'))
-                    Managemen User
+                    Manajemen User
                     @elseif(request()->routeIs('roles.*'))
-                    Manajemen Role & Permission
+                    Manajemen Role & Izin
                     @elseif(request()->routeIs('unit-kerja.*'))
                     Manajemen Unit Kerja
                     @else

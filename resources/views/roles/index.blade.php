@@ -17,7 +17,7 @@
             <div class="bg-white rounded-[2rem] shadow-sm border border-slate-100 p-6 border-t-4">
                 <div class="flex justify-between items-center">
                     <div>
-                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Permission</p>
+                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Izin</p>
                         <p class="text-3xl font-black text-emerald-600 mt-1">{{ $totalPermissions }}</p>
                     </div>
                     <div class="bg-emerald-50 p-3 rounded-2xl">
