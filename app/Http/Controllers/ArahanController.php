@@ -21,7 +21,7 @@ class ArahanController extends Controller
         $query = Arahan::with(['keputusan', 'pics', 'bidang']);
 
         if ($user->hasRole(['Auditi', 'Atasan Auditi'])) {
-            $query->whereHas('pics', function($q) use ($user) {
+            $query->whereHas('pics', function ($q) use ($user) {
                 $q->where('user_id', $user->id);
             });
         }
@@ -31,7 +31,7 @@ class ArahanController extends Controller
     }
 
     public function create(Request $request)
-    { 
+    {
         if (!Gate::allows('create_arahan')) {
             abort(403);
         }
@@ -45,7 +45,10 @@ class ArahanController extends Controller
 
         $keputusan = Keputusan::whereIn('status', ['BD', 'BS'])->latest()->get();
         $bidang    = Bidang::orderBy('name')->get();
-        $users     = User::with('unitKerja')->orderBy('name')->get();
+        $users = User::with('unitKerja')
+            ->role('Auditi')
+            ->orderBy('name')
+            ->get();
 
         $existingArahan = collect();
         if ($keputusanId) {
@@ -84,7 +87,7 @@ class ArahanController extends Controller
                 'tanggal_target'    => $data['tanggal_target'],
                 'status'            => 'draft'
             ]);
-            
+
             // Sync PIC (many-to-many)
             if (isset($data['pic_unit_kerja_ids']) && is_array($data['pic_unit_kerja_ids'])) {
                 $arahan->pics()->sync($data['pic_unit_kerja_ids']);
@@ -99,7 +102,6 @@ class ArahanController extends Controller
 
             return redirect()->route('keputusan.show', $arahan->keputusan_id)
                 ->with('success', 'Arahan berhasil disimpan.');
-
         } catch (\Exception $e) {
             DB::rollback();
             return back()->withInput()->with('error', 'Gagal menyimpan arahan: ' . $e->getMessage());
@@ -136,7 +138,7 @@ class ArahanController extends Controller
         $keputusanSelected = $arahan->keputusan;
         $bidang = Bidang::orderBy('name')->get();
         $users  = User::with('unitKerja')->orderBy('name')->get();
-        
+
         $selectedPics = $arahan->pics->pluck('id')->toArray();
 
         $existingArahan = Arahan::where('keputusan_id', $arahan->keputusan_id)
@@ -170,17 +172,17 @@ class ArahanController extends Controller
         DB::beginTransaction();
         try {
             $data = $request->validated();
-            
+
             $arahan->update([
                 'bidang_id' => $data['bidang_id'],
                 'strategi' => $data['strategi'],
                 'tanggal_target' => $data['tanggal_target'],
             ]);
-            
+
             if (isset($data['pic_unit_kerja_ids'])) {
                 $arahan->pics()->sync($data['pic_unit_kerja_ids']);
             }
-            
+
             DB::commit();
 
             if ($request->after_save === 'continue') {
@@ -190,7 +192,6 @@ class ArahanController extends Controller
 
             return redirect()->route('keputusan.show', $arahan->keputusan_id)
                 ->with('success', 'Arahan berhasil diperbarui.');
-                
         } catch (\Exception $e) {
             DB::rollback();
             return back()->withInput()->with('error', 'Gagal: ' . $e->getMessage());
@@ -204,7 +205,7 @@ class ArahanController extends Controller
         }
 
         $keputusanId = $arahan->keputusan_id;
-        
+
         // Hapus relasi many-to-many terlebih dahulu
         $arahan->pics()->detach();
         $arahan->delete();

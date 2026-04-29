@@ -100,70 +100,70 @@
                             <th class="px-6 py-4">BIDANG</th>
                             <th class="px-6 py-4">STRATEGI/ARAHAN</th>
                             <th class="px-6 py-4">TANGGAL TARGET</th>
-                            <th class="px-6 py-4 text-center">STATUS</th>
+
                             <th class="px-6 py-4 text-right">AKSI</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-50">
                         @forelse($arahan as $item)
                         @php
-                            $userUnitKerjaId = Auth::user()->unit_kerja_id;
+                        $userUnitKerjaId = Auth::user()->unit_kerja_id;
 
-                            // Tindak lanjut milik unit user yang sedang login
-                            $tlMilikUser = $item->tindakLanjut
-                                ->where('unit_kerja_id', $userUnitKerjaId)
-                                ->sortByDesc('created_at')
-                                ->first();
+                        // Tindak lanjut milik unit user yang sedang login
+                        $tlMilikUser = $item->tindakLanjut
+                        ->where('unit_kerja_id', $userUnitKerjaId)
+                        ->sortByDesc('created_at')
+                        ->first();
 
-                            // Untuk tampilan status kolom (berdasarkan semua unit)
-                            $latestTl = $item->tindakLanjut->sortByDesc('created_at')->first();
-                            $count = $item->tindakLanjut->count();
-                            $hasInput = $count > 0;
+                        // Untuk tampilan status kolom (berdasarkan semua unit)
+                        $latestTl = $item->tindakLanjut->sortByDesc('created_at')->first();
+                        $count = $item->tindakLanjut->count();
+                        $hasInput = $count > 0;
 
-                            $isGlobalTD = ($item->status ?? '') === 'td';
+                        $isGlobalTD = ($item->status ?? '') === 'td';
 
-                            $isFullyApproved = $latestTl
-                                ? $latestTl->approvals()->where('stage', 5)->where('status', 'approved')->exists()
-                                : false;
-                            $isRevisi    = $latestTl && $latestTl->status === 'rejected';
-                            $isInApproval = $latestTl && $latestTl->status === 'in_approval';
+                        $isFullyApproved = $latestTl
+                        ? $latestTl->approvals()->where('stage', 5)->where('status', 'approved')->exists()
+                        : false;
+                        $isRevisi = $latestTl && $latestTl->status === 'rejected';
+                        $isInApproval = $latestTl && $latestTl->status === 'in_approval';
 
-                            // Kondisi khusus PER UNIT USER
-                            $sudahInputUnitIni   = !is_null($tlMilikUser);
-                            $isRevisiUnitIni     = $tlMilikUser && $tlMilikUser->status === 'rejected';
-                            $isApprovedUnitIni   = $tlMilikUser && $tlMilikUser->status === 'approved';
-                            $isInApprovalUnitIni = $tlMilikUser && $tlMilikUser->status === 'in_approval';
+                        // Kondisi khusus PER UNIT USER
+                        $sudahInputUnitIni = !is_null($tlMilikUser);
+                        $isRevisiUnitIni = $tlMilikUser && $tlMilikUser->status === 'rejected';
+                        $isApprovedUnitIni = $tlMilikUser && $tlMilikUser->status === 'approved';
+                        $isInApprovalUnitIni = $tlMilikUser && $tlMilikUser->status === 'in_approval';
 
-                            // Status badge (tampilan kolom status)
-                            if ($isGlobalTD) {
-                                $statusCode  = 'TD';
-                                $statusText  = 'Tidak Ditindaklanjuti';
-                                $statusColor = 'slate';
-                            } elseif ($isFullyApproved) {
-                                $statusCode  = 'S';
-                                $statusText  = 'Selesai';
-                                $statusColor = 'emerald';
-                            } elseif ($isRevisi) {
-                                $statusCode  = 'BS';
-                                $statusText  = 'Perlu Revisi';
-                                $statusColor = 'orange';
-                            } elseif ($isInApproval) {
-                                $statusCode  = 'BS';
-                                $statusText  = 'Dalam Approval';
-                                $statusColor = 'blue';
-                            } elseif ($latestTl) {
-                                $statusCode  = 'BS';
-                                $statusText  = 'Sedang Berjalan';
-                                $statusColor = 'amber';
-                            } else {
-                                $statusCode  = 'BS';
-                                $statusText  = 'Belum Ditindaklanjuti';
-                                $statusColor = 'rose';
-                            }
+                        // Status badge (tampilan kolom status)
+                        if ($isGlobalTD) {
+                        $statusCode = 'TD';
+                        $statusText = 'Tidak Ditindaklanjuti';
+                        $statusColor = 'slate';
+                        } elseif ($isFullyApproved) {
+                        $statusCode = 'S';
+                        $statusText = 'Selesai';
+                        $statusColor = 'emerald';
+                        } elseif ($isRevisi) {
+                        $statusCode = 'BS';
+                        $statusText = 'Perlu Revisi';
+                        $statusColor = 'orange';
+                        } elseif ($isInApproval) {
+                        $statusCode = 'BS';
+                        $statusText = 'Dalam Approval';
+                        $statusColor = 'blue';
+                        } elseif ($latestTl) {
+                        $statusCode = 'BS';
+                        $statusText = 'Sedang Berjalan';
+                        $statusColor = 'amber';
+                        } else {
+                        $statusCode = 'BS';
+                        $statusText = 'Belum Ditindaklanjuti';
+                        $statusColor = 'rose';
+                        }
 
-                            $revisiCount = $latestTl
-                                ? $latestTl->approvals()->where('status', 'rejected')->count()
-                                : 0;
+                        $revisiCount = $latestTl
+                        ? $latestTl->approvals()->where('status', 'rejected')->count()
+                        : 0;
                         @endphp
                         <tr class="hover:bg-slate-50/50 transition group">
                             <td class="px-6 py-4">
@@ -185,51 +185,55 @@
                                             : '-') }}
                                 </span>
                             </td>
-                            <td class="px-6 py-4 text-center">
-                                <div class="flex flex-col items-center gap-1">
-                                    <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-{{ $statusColor }}-50 text-{{ $statusColor }}-700 border border-{{ $statusColor }}-100 rounded-full text-[10px] font-black uppercase tracking-tighter">
-                                        <span class="w-1.5 h-1.5 rounded-full bg-{{ $statusColor }}-600"></span>
-                                        {{ $statusCode }} - {{ $statusText }}
-                                    </span>
-                                    @if($hasInput)
-                                    <span class="text-[9px] text-slate-400 font-bold italic">({{ $count }} Laporan)</span>
-                                    @endif
-                                </div>
-                            </td>
+
                             <td class="px-6 py-4 text-right">
-                                <div class="flex justify-end gap-2">
-                                    {{-- Tombol Lihat Detail selalu muncul --}}
+                                <div class="flex items-center justify-end gap-2.5">
+                                    {{-- Aksi Lihat Detail: Teks & Ikon Lebih Kecil --}}
                                     <a href="{{ route('tindaklanjut.show_arahan', $item->id) }}"
-                                        class="px-4 py-2 bg-slate-50 text-slate-600 hover:text-blue-600 rounded-xl transition hover:bg-blue-50 text-xs font-black uppercase tracking-wider">
-                                        Lihat Detail
+                                        class="group inline-flex items-center gap-1.5 text-slate-400 hover:text-blue-700 transition">
+                                        <span class="text-[10px] font-bold tracking-tight whitespace-nowrap uppercase">Detail</span>
+                                        <svg class="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
+                                        </svg>
                                     </a>
 
                                     @can('create_tindak_lanjut')
-                                        @if(!$isGlobalTD)
-                                            @if($isRevisiUnitIni && $tlMilikUser)
-                                                {{-- Unit ini punya laporan yang perlu direvisi --}}
-                                                <a href="{{ route('tindaklanjut.edit', $tlMilikUser->id) }}"
-                                                    class="inline-flex items-center px-4 py-2 bg-orange-600 text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-orange-700 transition shadow-lg shadow-orange-200">
-                                                    Revisi Laporan
-                                                </a>
-                                            @elseif(!$sudahInputUnitIni)
-                                                {{-- Unit ini belum pernah input sama sekali --}}
-                                                <a href="{{ route('tindaklanjut.create', ['arahan_id' => $item->id]) }}"
-                                                    class="inline-flex items-center px-4 py-2 bg-slate-900 text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-slate-800 transition shadow-lg shadow-slate-200">
-                                                    Isi Tindak Lanjut
-                                                </a>
-                                            @elseif($isApprovedUnitIni)
-                                                {{-- Unit ini sudah selesai, tampilkan badge --}}
-                                                <span class="inline-flex items-center px-4 py-2 bg-emerald-50 text-emerald-700 border border-emerald-100 rounded-xl font-black text-[10px] uppercase tracking-widest">
-                                                    ✓ Sudah Selesai
-                                                </span>
-                                            @elseif($isInApprovalUnitIni)
-                                                {{-- Unit ini sedang dalam proses approval --}}
-                                                <span class="inline-flex items-center px-4 py-2 bg-blue-50 text-blue-700 border border-blue-100 rounded-xl font-black text-[10px] uppercase tracking-widest">
-                                                    Dalam Approval
-                                                </span>
-                                            @endif
-                                        @endif
+                                    {{-- Pembatas Vertikal Lebih Pendek --}}
+                                    <div class="h-4 w-px bg-slate-200"></div>
+
+                                    @if($isRevisiUnitIni && $tlMilikUser)
+                                    {{-- Tombol Revisi: Ukuran 8x8 --}}
+                                    <a href="{{ route('tindaklanjut.edit', $tlMilikUser->id) }}"
+                                        class="inline-flex items-center justify-center w-8 h-8 bg-orange-50 text-orange-600 hover:bg-orange-600 hover:text-white rounded-lg transition"
+                                        title="Revisi Laporan">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                        </svg>
+                                    </a>
+                                    @elseif(!$sudahInputUnitIni)
+                                    {{-- Tombol Isi: Ukuran 8x8 --}}
+                                    <a href="{{ route('tindaklanjut.create', ['arahan_id' => $item->id]) }}"
+                                        class="inline-flex items-center justify-center w-8 h-8 bg-slate-900 text-white hover:bg-blue-600 rounded-lg transition shadow-sm"
+                                        title="Isi Tindak Lanjut">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path>
+                                        </svg>
+                                    </a>
+                                    @elseif($isApprovedUnitIni)
+                                    {{-- Badge Selesai: Lebih Mungil --}}
+                                    <div class="flex items-center justify-center w-8 h-8 bg-emerald-50 text-emerald-600 rounded-lg border border-emerald-100" title="Selesai">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                                        </svg>
+                                    </div>
+                                    @elseif($isInApprovalUnitIni)
+                                    {{-- Ikon Menunggu: Ukuran 8x8 --}}
+                                    <div class="flex items-center justify-center w-8 h-8 bg-blue-50 text-blue-500 rounded-lg" title="Menunggu Approval">
+                                        <svg class="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                        </svg>
+                                    </div>
+                                    @endif
                                     @endcan
                                 </div>
                             </td>

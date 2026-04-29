@@ -1,13 +1,13 @@
 <x-app-layout>
     @php
     function getLevelTheme($level) {
-    switch($level) {
-    case 'Direktorat': return ['bg' => 'bg-slate-900', 'badge' => 'bg-blue-100 text-blue-700', 'border' => 'border-blue-500'];
-    case 'Kompartemen': return ['bg' => 'bg-indigo-900', 'badge' => 'bg-emerald-100 text-emerald-700', 'border' => 'border-emerald-500'];
-    case 'Departemen': return ['bg' => 'bg-slate-800', 'badge' => 'bg-amber-100 text-amber-700', 'border' => 'border-amber-500'];
-    case 'Seksi': return ['bg' => 'bg-slate-700', 'badge' => 'bg-purple-100 text-purple-700', 'border' => 'border-purple-500'];
-    default: return ['bg' => 'bg-slate-500', 'badge' => 'bg-slate-100 text-slate-700', 'border' => 'border-slate-400'];
-    }
+        switch($level) {
+            case 'Direktorat': return ['bg' => 'bg-slate-900', 'badge' => 'bg-blue-100 text-blue-700', 'border' => 'border-blue-500'];
+            case 'Kompartemen': return ['bg' => 'bg-indigo-900', 'badge' => 'bg-emerald-100 text-emerald-700', 'border' => 'border-emerald-500'];
+            case 'Departemen': return ['bg' => 'bg-slate-800', 'badge' => 'bg-amber-100 text-amber-700', 'border' => 'border-amber-500'];
+            case 'Seksi': return ['bg' => 'bg-slate-700', 'badge' => 'bg-purple-100 text-purple-700', 'border' => 'border-purple-500'];
+            default: return ['bg' => 'bg-slate-500', 'badge' => 'bg-slate-100 text-slate-700', 'border' => 'border-slate-400'];
+        }
     }
     @endphp
 
@@ -39,12 +39,21 @@
         {{-- Actions Bar --}}
         <div class="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 overflow-hidden">
             <div class="p-6 border-b border-slate-50 flex justify-between items-center flex-wrap gap-4">
-                <a href="{{ route('unit-kerja.create') }}" class="inline-flex items-center px-5 py-2.5 bg-slate-900 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-slate-800 transition shadow-lg shadow-slate-200">
-                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4"></path>
-                    </svg>
-                    Tambah Unit
-                </a>
+                <div class="flex gap-2">
+                    <a href="{{ route('unit-kerja.create') }}" class="inline-flex items-center px-5 py-2.5 bg-slate-900 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-slate-800 transition shadow-lg shadow-slate-200">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4"></path>
+                        </svg>
+                        Tambah Unit
+                    </a>
+                    {{-- Tombol Kelola Bidang --}}
+                    <button onclick="openBidangModal()" class="inline-flex items-center px-5 py-2.5 bg-indigo-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-indigo-700 transition shadow-lg shadow-indigo-100">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                        </svg>
+                        Kelola Bidang
+                    </button>
+                </div>
 
                 <form method="GET" class="flex gap-2">
                     <select name="level" class="px-4 py-2 border-slate-200 rounded-xl text-xs font-bold text-slate-600">
@@ -67,6 +76,7 @@
                     <thead class="bg-slate-50/50 text-slate-400 uppercase text-[10px] font-black tracking-widest">
                         <tr>
                             <th class="px-6 py-4">Nama Unit Kerja</th>
+                           
                             <th class="px-6 py-4">Level</th>
                             <th class="px-6 py-4">Atasan</th>
                             <th class="px-6 py-4">SDM & Output</th>
@@ -88,6 +98,7 @@
                                     </div>
                                 </div>
                             </td>
+                            
                             <td class="px-6 py-4">
                                 <span class="px-2.5 py-1 {{ $theme['badge'] }} rounded-lg text-[10px] font-black uppercase tracking-widest border border-slate-100">
                                     {{ $unit->level }}
@@ -105,31 +116,20 @@
                             <td class="px-6 py-4 text-right">
                                 <div class="flex justify-end space-x-2">
                                     <a href="{{ route('unit-kerja.show', $unit) }}" class="p-2 bg-slate-50 text-slate-400 hover:text-blue-600 rounded-xl transition hover:bg-blue-50">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                        </svg>
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
                                     </a>
                                     <a href="{{ route('unit-kerja.edit', $unit) }}" class="p-2 bg-slate-50 text-slate-400 hover:text-emerald-600 rounded-xl transition hover:bg-emerald-50">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                        </svg>
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
                                     </a>
-                                    <button type="button"
-                                        data-id="{{ $unit->id }}"
-                                        data-name="{{ $unit->name }}"
-                                        onclick="showDeleteModal(this)"
-                                        class="p-2 bg-slate-50 text-slate-400 hover:text-rose-600 rounded-xl transition hover:bg-rose-50">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                        </svg>
+                                    <button type="button" data-id="{{ $unit->id }}" data-name="{{ $unit->name }}" onclick="showDeleteModal(this)" class="p-2 bg-slate-50 text-slate-400 hover:text-rose-600 rounded-xl transition hover:bg-rose-50">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                                     </button>
                                 </div>
                             </td>
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="5" class="px-6 py-20 text-center text-slate-400 italic font-bold">Tidak ada unit kerja yang ditemukan</td>
+                            <td colspan="6" class="px-6 py-20 text-center text-slate-400 italic font-bold">Tidak ada unit kerja yang ditemukan</td>
                         </tr>
                         @endforelse
                     </tbody>
@@ -142,17 +142,98 @@
         </div>
     </div>
 
-    {{-- Delete Modal Sesuai User --}}
+    {{-- MODAL CRUD BIDANG (Overlay) --}}
+    <div id="bidangModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-md hidden items-center justify-center z-[60]">
+        <div class="bg-white rounded-[2.5rem] shadow-2xl max-w-2xl w-full mx-4 overflow-hidden flex flex-col max-h-[90vh]">
+            <div class="p-6 border-b border-slate-100 flex justify-between items-center">
+                <h3 class="text-lg font-black text-slate-800 uppercase tracking-tight">Master Data Bidang</h3>
+                <button onclick="closeBidangModal()" class="text-slate-400 hover:text-slate-600 transition text-2xl">&times;</button>
+            </div>
+            
+            <div class="p-6 overflow-y-auto">
+                {{-- Form Tambah Bidang --}}
+                <form id="bidangForm" method="POST" action="{{ route('bidang.store') }}" class="mb-8 bg-slate-50 p-4 rounded-3xl">
+                    @csrf
+                    <div class="flex gap-2">
+                        <input type="text" name="name" id="bidangInputName" placeholder="Nama Bidang Baru..." required
+                            class="flex-1 px-4 py-2.5 border-slate-200 rounded-2xl text-sm font-bold focus:ring-indigo-500">
+                        <button type="submit" id="bidangSubmitBtn" class="bg-indigo-600 text-white px-6 py-2.5 rounded-2xl font-black text-xs uppercase transition">Simpan</button>
+                    </div>
+                </form>
+
+                {{-- List Bidang --}}
+                <div class="space-y-3">
+                    @foreach($bidang as $b)
+                    <div class="flex items-center justify-between p-4 bg-white border border-slate-100 rounded-2xl hover:border-indigo-200 transition">
+                        <span class="font-bold text-slate-700 text-sm">{{ $b->name }}</span>
+                        <div class="flex gap-2">
+                            <button onclick="editBidang('{{ $b->id }}', '{{ $b->name }}')" class="p-2 text-emerald-600 hover:bg-emerald-50 rounded-xl transition">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                            </button>
+                            <form action="{{ route('bidang.destroy', $b->id) }}" method="POST" onsubmit="return confirm('Hapus bidang ini?')">
+                                @csrf @method('DELETE')
+                                <button type="submit" class="p-2 text-rose-600 hover:bg-rose-50 rounded-xl transition">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    @endforeach
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- Script Modal Bidang --}}
+    <script>
+        function openBidangModal() {
+            document.getElementById('bidangModal').classList.remove('hidden');
+            document.getElementById('bidangModal').classList.add('flex');
+        }
+        function closeBidangModal() {
+            document.getElementById('bidangModal').classList.add('hidden');
+            document.getElementById('bidangModal').classList.remove('flex');
+            // Reset form ke mode 'Simpan'
+            document.getElementById('bidangForm').action = "{{ route('bidang.store') }}";
+            document.getElementById('bidangInputName').value = '';
+            document.getElementById('bidangSubmitBtn').innerText = 'Simpan';
+            // Remove hidden method input if exists
+            const oldMethod = document.getElementById('bidangMethod');
+            if(oldMethod) oldMethod.remove();
+        }
+        function editBidang(id, name) {
+            const form = document.getElementById('bidangForm');
+            const input = document.getElementById('bidangInputName');
+            const btn = document.getElementById('bidangSubmitBtn');
+            
+            input.value = name;
+            btn.innerText = 'Update';
+            
+            // Ubah action form ke update
+            let url = "{{ route('bidang.update', ':id') }}";
+            form.action = url.replace(':id', id);
+            
+            // Tambahkan input @method('PUT') secara dinamis
+            if(!document.getElementById('bidangMethod')) {
+                const methodInput = document.createElement('input');
+                methodInput.type = 'hidden';
+                methodInput.name = '_method';
+                methodInput.value = 'PUT';
+                methodInput.id = 'bidangMethod';
+                form.appendChild(methodInput);
+            }
+        }
+    </script>
+
+    {{-- Delete Modal Unit Kerja (Existing) --}}
     <div id="deleteModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden items-center justify-center z-50">
         <div class="bg-white rounded-[2.5rem] shadow-2xl max-w-md w-full mx-4 overflow-hidden">
             <div class="p-8 text-center">
                 <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-3xl bg-rose-50 mb-6">
-                    <svg class="h-8 w-8 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
-                    </svg>
+                    <svg class="h-8 w-8 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
                 </div>
                 <h3 class="text-xl font-black text-slate-800 mb-2 uppercase tracking-tight">Konfirmasi Hapus</h3>
-                <p class="text-sm text-slate-500 mb-8 leading-relaxed">Hapus unit <span id="deleteUnitName" class="font-black text-slate-900"></span>? Tindakan ini akan gagal jika masih ada data terkait (User/Bawahan).</p>
+                <p class="text-sm text-slate-500 mb-8 leading-relaxed">Hapus unit <span id="deleteUnitName" class="font-black text-slate-900"></span>? Tindakan ini akan gagal jika masih ada data terkait.</p>
                 <div class="flex justify-center space-x-3">
                     <button onclick="closeDeleteModal()" class="px-6 py-3 bg-slate-100 text-slate-600 rounded-2xl font-black text-xs uppercase hover:bg-slate-200 transition">Batal</button>
                     <form id="deleteForm" method="POST">
@@ -166,19 +247,14 @@
 
     <script>
         function showDeleteModal(button) {
-            // Ambil data dari attribute tadi
             const id = button.getAttribute('data-id');
             const name = button.getAttribute('data-name');
-
             document.getElementById('deleteUnitName').textContent = name;
-
             let url = "{{ route('unit-kerja.destroy', ':id') }}";
             document.getElementById('deleteForm').action = url.replace(':id', id);
-
             document.getElementById('deleteModal').classList.remove('hidden');
             document.getElementById('deleteModal').classList.add('flex');
         }
-
         function closeDeleteModal() {
             document.getElementById('deleteModal').classList.add('hidden');
             document.getElementById('deleteModal').classList.remove('flex');

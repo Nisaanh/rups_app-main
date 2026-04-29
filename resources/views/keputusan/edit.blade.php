@@ -18,7 +18,7 @@
                 <div class="p-10 bg-slate-900 text-white relative overflow-hidden">
                     <div class="relative z-10">
                         <p class="text-[10px] font-black uppercase tracking-[0.2em] text-blue-400 mb-2">Pembaruan Data</p>
-                        <h3 class="text-2xl font-black tracking-tight uppercase">{{ $keputusan->nomor_keputusan ?? 'Draft Keputusan' }}</h3>
+                        <h3 class="text-2xl font-black tracking-tight uppercase">{{  $keputusan->periode_year ?? 'Draft Keputusan' }}</h3>
                         <p class="text-slate-400 text-xs mt-2 font-medium">Terdaftar pada: {{ $keputusan->created_at->format('d M Y, H:i') }} WIB</p>
                     </div>
                     {{-- Decorative Element --}}
@@ -49,7 +49,7 @@
                     </div>
                     @endif
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div class="grid grid-cols-1 md:grid-cols-1 gap-8">
                         {{-- Periode Tahun --}}
                         <div class="space-y-2">
                             <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Periode Tahun <span class="text-rose-500">*</span></label>
@@ -58,22 +58,7 @@
                                 placeholder="Contoh: 2026" required>
                         </div>
 
-                        {{-- Status (Readonly/Info) --}}
-                        <div class="space-y-2">
-                            <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Status Saat Ini</label>
-                            <div class="w-full px-6 py-4 bg-slate-100 border-slate-200 rounded-2xl font-black text-slate-400 text-xs uppercase tracking-widest flex items-center">
-                                <span class="w-2 h-2 bg-slate-400 rounded-full mr-3"></span>
-                                {{ $keputusan->status }}
-                            </div>
-                        </div>
-                    </div>
-
-                    {{-- Nomor Keputusan --}}
-                    <div class="space-y-2">
-                        <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Nomor Keputusan RUPS <span class="text-rose-500">*</span></label>
-                        <input type="text" name="nomor_keputusan" value="{{ old('nomor_keputusan', $keputusan->nomor_keputusan) }}" 
-                            class="w-full px-6 py-4 bg-slate-50 border-slate-200 rounded-2xl focus:border-blue-500 focus:ring-blue-500 font-bold text-slate-700 transition" 
-                            placeholder="Contoh: KEP-01/RUPS/2026" required>
+                       
                     </div>
 
                     {{-- Note Info --}}
@@ -81,7 +66,7 @@
                         <div class="flex">
                             <svg class="w-5 h-5 text-blue-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                             <p class="text-[11px] font-bold text-blue-700 leading-relaxed uppercase tracking-tighter">
-                                Perubahan data keputusan akan mempengaruhi seluruh butir arahan yang terhubung. Pastikan nomor keputusan sudah sesuai dengan dokumen fisik.
+                                Perubahan data keputusan akan mempengaruhi seluruh butir arahan yang terhubung. Pastikan tahun keputusan sudah sesuai dengan dokumen fisik.
                             </p>
                         </div>
                     </div>

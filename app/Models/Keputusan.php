@@ -10,7 +10,7 @@ class Keputusan extends Model
     protected $table = 'keputusan';
     use HasFactory;
 
-    protected $fillable = ['nomor_keputusan','periode_year', 'status', 'created_by'];
+    protected $fillable = ['periode_year', 'status', 'created_by'];
 
     public function creator()
     {

@@ -1,424 +1,399 @@
 <x-app-layout>
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="space-y-6">
 
-        {{-- ═══════════════════════════════
-         BREADCRUMB + HEADER
-    ═══════════════════════════════ --}}
-        <div class="mb-8">
-            <nav class="flex text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-3 gap-2 items-center">
-                <a class="hover:text-slate-700 transition-colors" href="{{ route('dashboard') }}">Beranda</a>
-                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                </svg>
-                <a class="hover:text-slate-700 transition-colors" href="{{ route('tindaklanjut.index') }}">Tindak Lanjut</a>
-                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                </svg>
-                <span class="text-slate-700">Detail Arahan</span>
-            </nav>
+        {{-- Header Card + Informasi Arahan (Digabung) --}}
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+            <div class="p-6 bg-gradient-to-r from-slate-900 to-slate-800">
+                <div class="flex flex-col gap-3">
+                    <div class="flex flex-wrap items-center gap-2">
+                        {{-- Badge Bidang --}}
+                        <span class="px-3 py-1 bg-white/20 text-white rounded-lg text-xs font-bold uppercase tracking-wider">
+                            {{ $arahan->bidang->name ?? '-' }}
+                        </span>
 
-            @php
-
-            $aggregateStatus = $arahan->getAggregateStatus();
-
-            $isGlobalTD = $aggregateStatus === 'td';
-            $isGlobalSelesai = $aggregateStatus === 'S';
-            $isGlobalBelumSelesai = $aggregateStatus === 'BS';
-            @endphp
-
-            <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
-                <div class="flex-1">
-                    <div class="flex items-center gap-3 mb-2">
-                        @if($isGlobalTD)
-                        <span class="px-3 py-1 bg-slate-100 text-slate-600 rounded-full text-[10px] font-black uppercase tracking-wider">TD — Tidak Ditindaklanjuti</span>
-                        @elseif($isGlobalSelesai)
-                        <span class="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-[10px] font-black uppercase tracking-wider">✓ Selesai</span>
-                        @else
-                        {{-- Ini akan otomatis muncul jika ada unit yang masih pending/revisi --}}
-                        <span class="px-3 py-1 bg-amber-100 text-amber-700 rounded-full text-[10px] font-black uppercase tracking-wider">Belum Selesai</span>
-                        @endif
-                        <span class="text-[10px] text-slate-400 font-bold uppercase">{{ $arahan->bidang->name ?? '-' }}</span>
+                        {{-- Badge Target --}}
+                        <span class="px-3 py-1 bg-white/10 text-white/80 rounded-lg text-xs font-medium">
+                            Target: <span class="text-white font-bold">{{ $arahan->tanggal_target ? $arahan->tanggal_target->format('d M Y') : '-' }}</span>
+                        </span>
                     </div>
-                    <h1 class="text-xl font-black text-slate-900 leading-snug max-w-2xl">{{ $arahan->strategi }}</h1>
-                    <p class="text-xs text-slate-400 font-bold mt-2">Target: {{ $arahan->tanggal_target ? $arahan->tanggal_target->format('d M Y') : '-' }}</p>
+
+                    {{-- Ukuran Judul: text-xl (Proporsional) --}}
+                    <h1 class="text-xl md:text-2xl font-bold text-white leading-snug">
+                        {{ $arahan->strategi }}
+                    </h1>
+                </div>
+            </div>
+
+            {{-- Konten: Putih Bersih --}}
+            <div class="p-6 bg-white">
+                <div class="flex flex-col gap-3">
+                    <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest">Unit Kerja / PIC</h3>
+
+                    <div class="flex flex-wrap gap-2">
+                        @forelse($arahan->pics as $pic)
+                        <div class="inline-flex items-center gap-2.5 px-3 py-2 bg-slate-50 border border-slate-100 rounded-xl transition-all hover:bg-slate-100">
+                            {{-- Avatar: Biru --}}
+                            <div class="w-7 h-7 bg-blue-600 rounded-lg flex items-center justify-center text-white text-[11px] font-black">
+                                {{ substr($pic->name, 0, 1) }}
+                            </div>
+                            <span class="text-sm font-bold text-slate-700">
+                                {{ $pic->name }}
+                            </span>
+                        </div>
+                        @empty
+                        <span class="text-sm text-slate-400 italic">Belum ada PIC</span>
+                        @endforelse
+                    </div>
                 </div>
             </div>
         </div>
 
-        @if($isGlobalTD)
-        <div class="mb-6 p-4 bg-slate-50 border border-slate-200 rounded-2xl flex items-center gap-3">
-            <div class="w-8 h-8 bg-slate-200 rounded-full flex items-center justify-center flex-shrink-0">
-                <svg class="w-4 h-4 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
-                </svg>
-            </div>
-            <div>
-                <p class="text-sm font-bold text-slate-700">Proses dihentikan — Status TD</p>
-                <p class="text-xs text-slate-500">Arahan ini telah ditetapkan Tidak Dapat Ditindaklanjuti. Tidak ada input atau revisi baru yang dapat dilakukan.</p>
-            </div>
-        </div>
-        @endif
-
-        {{-- ═══════════════════════════════
-         LAYOUT: LEFT (tabs) + RIGHT (info)
-    ═══════════════════════════════ --}}
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-
-            {{-- ─────────────────────────────
-             LEFT: TAB PER UNIT KERJA
-        ───────────────────────────── --}}
-            <div class="lg:col-span-2">
-
-                @php
-                // Kelompokkan tindak lanjut per unit kerja
-                $tlPerUnit = $arahan->tindakLanjut->groupBy('unit_kerja_id');
-                $unitList = $tlPerUnit->keys();
-                @endphp
-
-                @if($tlPerUnit->isEmpty())
-                <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-16 text-center">
-                    <div class="w-14 h-14 bg-slate-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                        <svg class="w-7 h-7 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                        </svg>
+        {{-- TABEL DAFTAR UNIT KERJA --}}
+        <div class="bg-white rounded-[2rem] shadow-sm border border-slate-100 overflow-hidden">
+            <div class="p-6 border-b border-slate-100 bg-slate-50/50">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-base font-black text-slate-800 uppercase tracking-tight">Daftar Penugasan Unit</h3>
+                        <p class="text-[9px] text-slate-400 font-bold mt-0.5">Klik "Lihat Detail" untuk melihat laporan lengkap</p>
                     </div>
-                    <p class="text-sm font-bold text-slate-400">Belum ada laporan yang masuk</p>
-                    <p class="text-xs text-slate-300 mt-1">Unit kerja belum melakukan input tindak lanjut</p>
+                    @if($tlPerUnit->count() > 0)
+                    <div class="flex items-center gap-2">
+                        <span class="text-[10px] font-bold text-slate-400 bg-slate-100 px-2 py-1 rounded-full">
+                            {{ $tlPerUnit->count() }} Unit
+                        </span>
+                    </div>
+                    @endif
                 </div>
-                @else
+            </div>
 
-                {{-- Tab Navigation --}}
-                <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-
-                    {{-- Tab Headers --}}
-                    <div class="border-b border-slate-100 px-4 pt-4 flex gap-1 overflow-x-auto" id="unit-tabs">
+            <div class="overflow-x-auto">
+                @if($tlPerUnit->count() > 0)
+                <table class="w-full text-left border-collapse">
+                    <thead class="bg-slate-50/80 text-slate-500 uppercase text-[9px] font-black tracking-widest border-b border-slate-200">
+                        <tr>
+                            <th class="px-6 py-4">UNIT KERJA</th>
+                            <th class="px-6 py-4 text-center">STATUS LAPORAN</th>
+                            <th class="px-6 py-4 text-right">TINDAKAN</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-50">
                         @foreach($tlPerUnit as $unitId => $tlList)
                         @php
                         $firstTl = $tlList->sortByDesc('created_at')->first();
                         $unitName = $firstTl->unitKerja->name ?? 'Unit #'.$unitId;
-                        $unitShort = Str::limit($unitName, 20);
+
                         $tlStatus = $firstTl->status ?? 'pending';
-                        $isApprovedUnit = $tlStatus === 'approved';
-                        $isRejectedUnit = $tlStatus === 'rejected';
-                        $isInApprovalUnit = $tlStatus === 'in_approval';
-                        $tabIdx = $loop->index;
+
+                        $badgeColor = match($tlStatus) {
+                        'approved' => 'emerald',
+                        'rejected' => 'orange',
+                        'in_approval' => 'blue',
+                        'td' => 'slate',
+                        default => 'amber'
+                        };
+                        $badgeText = match($tlStatus) {
+                        'approved' => 'Selesai',
+                        'rejected' => 'Perlu Revisi',
+                        'in_approval' => 'Dalam Approval',
+                        'td' => 'Tidak Ditindaklanjuti',
+                        default => 'Pending'
+                        };
+                        $badgeIcon = match($tlStatus) {
+                        'approved' => '✓',
+                        'rejected' => '↺',
+                        'in_approval' => '⏳',
+                        'td' => '✗',
+                        default => '⏰'
+                        };
                         @endphp
-                        <button onclick="switchTab({{ $tabIdx }})"
-                            id="tab-btn-{{ $tabIdx }}"
-                            class="tab-btn flex-shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-t-xl text-[11px] font-black uppercase tracking-wider transition-all border-b-2
-                            {{ $tabIdx === 0 ? 'border-slate-900 text-slate-900 bg-slate-50' : 'border-transparent text-slate-400 hover:text-slate-600' }}">
-                            <span class="w-2 h-2 rounded-full flex-shrink-0
-                            {{ $isApprovedUnit ? 'bg-emerald-500' : ($isRejectedUnit ? 'bg-rose-500' : ($isInApprovalUnit ? 'bg-blue-500' : 'bg-amber-400')) }}">
-                            </span>
-                            {{ $unitShort }}
-                        </button>
-                        @endforeach
-                    </div>
-
-                    {{-- Tab Content --}}
-                    @foreach($tlPerUnit as $unitId => $tlList)
-                    @php
-                    $tabIdx = $loop->index;
-                    $tlSorted = $tlList->sortByDesc('created_at');
-                    $latestTlUnit = $tlSorted->first();
-                    $unitName = $latestTlUnit->unitKerja->name ?? '-';
-                    @endphp
-                    <div id="tab-content-{{ $tabIdx }}" class="tab-content {{ $tabIdx !== 0 ? 'hidden' : '' }}">
-
-                        {{-- Unit Header --}}
-                        <div class="px-6 py-4 bg-slate-50/60 border-b border-slate-100 flex items-center justify-between">
-                            <div>
-                                <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Unit Kerja</p>
-                                <p class="text-sm font-black text-slate-800">{{ $unitName }}</p>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                @php
-                                $tlStatus = $latestTlUnit->status ?? 'pending';
-                                $isApprovedUnit = $tlStatus === 'approved';
-                                $isRejectedUnit = $tlStatus === 'rejected';
-                                $isInApprovalUnit = $tlStatus === 'in_approval';
-                                @endphp
-                                @if($isApprovedUnit)
-                                <span class="px-3 py-1 bg-emerald-50 text-emerald-700 border border-emerald-100 rounded-full text-[9px] font-black uppercase">✓ Selesai</span>
-                                @elseif($isRejectedUnit)
-                                <span class="px-3 py-1 bg-rose-50 text-rose-700 border border-rose-100 rounded-full text-[9px] font-black uppercase">Perlu Revisi</span>
-                                @elseif($isInApprovalUnit)
-                                <span class="px-3 py-1 bg-blue-50 text-blue-700 border border-blue-100 rounded-full text-[9px] font-black uppercase">Dalam Approval</span>
-                                @else
-                                <span class="px-3 py-1 bg-amber-50 text-amber-700 border border-amber-100 rounded-full text-[9px] font-black uppercase">Pending</span>
-                                @endif
-                                <span class="text-[9px] font-bold text-slate-400">{{ $tlSorted->count() }} laporan</span>
-                            </div>
-                        </div>
-
-                        {{-- Laporan list untuk unit ini --}}
-                        <div class="divide-y divide-slate-50">
-                            @foreach($tlSorted as $tl)
-                            @php
-                            $bulanIndonesia = [1=>'Januari',2=>'Februari',3=>'Maret',4=>'April',5=>'Mei',6=>'Juni',7=>'Juli',8=>'Agustus',9=>'September',10=>'Oktober',11=>'November',12=>'Desember'];
-                            $bulan = $tl->periode_bulan ? ($bulanIndonesia[$tl->periode_bulan] ?? '-') : '-';
-                            $rejectedNote = $tl->approvals()->where('status','rejected')->whereNotNull('note')->latest()->first();
-                            $isLatest = $loop->first;
-                            @endphp
-                            <div class="p-6 {{ !$isLatest ? 'opacity-60' : '' }}">
-
-                                {{-- Laporan badge + meta --}}
-                                <div class="flex items-center gap-2 mb-4">
-                                    @if($isLatest)
-                                    <span class="px-2.5 py-1 bg-slate-900 text-white rounded-lg text-[9px] font-black uppercase tracking-wider">Terbaru</span>
-                                    @else
-                                    <span class="px-2.5 py-1 bg-slate-100 text-slate-500 rounded-lg text-[9px] font-black uppercase tracking-wider">Laporan {{ $loop->iteration }}</span>
-                                    @endif
-                                    <span class="text-[10px] text-slate-400 font-bold">{{ $bulan }} {{ $tl->periode_tahun }}</span>
-                                    <span class="text-slate-200 text-xs">·</span>
-                                    <span class="text-[10px] text-slate-400 font-bold">{{ $tl->created_at->format('d M Y') }}</span>
-                                    <span class="text-slate-200 text-xs">·</span>
-                                    <span class="text-[10px] text-slate-400 font-bold">{{ $tl->creator->name ?? '-' }}</span>
-                                </div>
-
-                                {{-- Tindak Lanjut --}}
-                                <div class="mb-4">
-                                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Uraian Tindak Lanjut</p>
-                                    <div class="bg-slate-50 rounded-xl p-4 border border-slate-100">
-                                        <p class="text-sm text-slate-700 leading-relaxed">{{ $tl->tindak_lanjut }}</p>
+                        <tr class="hover:bg-slate-50/50 transition group">
+                            <td class="px-6 py-4">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-full bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center text-slate-600 font-black text-sm shadow-sm">
+                                        {{ substr($unitName, 0, 2) }}
                                     </div>
-                                </div>
-
-                                {{-- Kendala --}}
-                                @if($tl->kendala)
-                                <div class="mb-4">
-                                    <p class="text-[9px] font-black text-rose-400 uppercase tracking-widest mb-1.5 flex items-center gap-1">
-                                        <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
-                                        </svg>
-                                        Kendala
-                                    </p>
-                                    <div class="bg-rose-50 rounded-xl p-4 border border-rose-100">
-                                        <p class="text-sm text-slate-700 leading-relaxed">{{ $tl->kendala }}</p>
-                                    </div>
-                                </div>
-                                @endif
-
-                                {{-- Keterangan --}}
-                                @if($tl->keterangan)
-                                <div class="mb-4">
-                                    <p class="text-[9px] font-black text-blue-400 uppercase tracking-widest mb-1.5 flex items-center gap-1">
-                                        <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
-                                        </svg>
-                                        Keterangan Tambahan
-                                    </p>
-                                    <div class="bg-blue-50 rounded-xl p-4 border border-blue-100">
-                                        <p class="text-sm text-slate-700 leading-relaxed">{{ $tl->keterangan }}</p>
-                                    </div>
-                                </div>
-                                @endif
-
-                                {{-- Evidence + Catatan Revisi --}}
-                                <div class="flex flex-wrap gap-3">
-                                    @if($tl->evidence_url)
-                                    <a href="{{ Storage::url($tl->evidence_url) }}" target="_blank"
-                                        class="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-600 border border-blue-100 rounded-xl text-[10px] font-black uppercase tracking-wider hover:bg-blue-100 transition">
-                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
-                                        </svg>
-                                        Lihat Evidence
-                                    </a>
-                                    @endif
-
-                                    @if($isLatest && $tl->status === 'rejected')
-                                    @can('edit_tindak_lanjut')
-                                    <a href="{{ route('tindaklanjut.edit', $tl->id) }}"
-                                        class="inline-flex items-center gap-2 px-4 py-2 bg-rose-600 text-white rounded-xl text-[10px] font-black uppercase tracking-wider hover:bg-rose-700 transition shadow-sm">
-                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                        </svg>
-                                        Revisi Laporan
-                                    </a>
-                                    @endcan
-                                    @endif
-                                </div>
-
-                                {{-- Catatan Revisi --}}
-                                @if($isLatest && $rejectedNote && $tl->status === 'rejected')
-                                <div class="mt-4 p-4 bg-rose-50 border border-rose-200 rounded-xl">
-                                    <p class="text-[9px] font-black text-rose-500 uppercase tracking-widest mb-1">Catatan Revisi</p>
-                                    <p class="text-sm text-rose-700 italic">"{{ $rejectedNote->note }}"</p>
-                                    <p class="text-[10px] text-rose-400 mt-1">— {{ $rejectedNote->approver->name ?? '-' }}, {{ $rejectedNote->approved_at?->format('d M Y H:i') }}</p>
-                                </div>
-                                @endif
-
-                            </div>
-                            @endforeach
-                        </div>
-
-                        {{-- Approval Timeline untuk unit ini --}}
-                        <div class="px-6 pb-6">
-                            <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-4">Riwayat Approval</p>
-                            @php
-                            $approvals = $latestTlUnit->approvals()->with('approver')->orderBy('stage')->get();
-                            $stages = [
-                            1 => 'Atasan Auditi',
-                            2 => 'Tim Monitoring',
-                            3 => 'Pengendali Teknis',
-                            4 => 'Pengendali Mutu',
-                            5 => 'Penanggung Jawab',
-                            ];
-                            $activeStage = null;
-                            foreach($stages as $num => $name) {
-                            $appr = $approvals->firstWhere('stage', $num);
-                            if($appr && $appr->status === 'pending') { $activeStage = $num; break; }
-                            }
-                            @endphp
-                            <div class="flex items-start gap-0">
-                                @foreach($stages as $stageNum => $stageName)
-                                @php
-                                $appr = $approvals->firstWhere('stage', $stageNum);
-                                $st = $appr ? $appr->status : null;
-                                $isActive = ($stageNum === $activeStage);
-                                $isLast = $loop->last;
-                                @endphp
-                                <div class="flex-1 flex flex-col items-center">
-                                    {{-- Circle --}}
-                                    <div class="relative flex items-center w-full">
-                                        @if(!$loop->first)
-                                        <div class="flex-1 h-px {{ $st === 'approved' ? 'bg-emerald-400' : 'bg-slate-200' }}"></div>
-                                        @endif
-                                        <div class="w-7 h-7 rounded-full flex-shrink-0 flex items-center justify-center border-2
-                                        {{ $st === 'approved' ? 'bg-emerald-500 border-emerald-500' :
-                                           ($st === 'rejected' ? 'bg-rose-500 border-rose-500' :
-                                           ($isActive ? 'bg-slate-900 border-slate-900' : 'bg-white border-slate-200')) }}">
-                                            @if($st === 'approved')
-                                            <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
+                                    <div>
+                                        <p class="font-bold text-slate-800 text-sm">{{ $unitName }}</p>
+                                        <p class="text-[10px] text-slate-400 font-bold mt-0.5 flex items-center gap-1">
+                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                                             </svg>
-                                            @elseif($st === 'rejected')
-                                            <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12" />
-                                            </svg>
-                                            @elseif($isActive)
-                                            <div class="w-2 h-2 rounded-full bg-white animate-pulse"></div>
-                                            @else
-                                            <span class="text-[9px] font-black text-slate-400">{{ $stageNum }}</span>
-                                            @endif
-                                        </div>
-                                        @if(!$isLast)
-                                        <div class="flex-1 h-px bg-slate-200"></div>
-                                        @endif
-                                    </div>
-                                    {{-- Label --}}
-                                    <div class="mt-2 text-center px-1">
-                                        <p class="text-[8px] font-black uppercase tracking-wide leading-tight
-                                        {{ $st === 'approved' ? 'text-emerald-600' : ($isActive ? 'text-slate-900' : 'text-slate-400') }}">
-                                            {{ Str::limit($stageName, 12) }}
+                                            {{ $firstTl->created_at->format('d M Y') }}
                                         </p>
-                                        @if($appr && $appr->approved_at)
-                                        <p class="text-[7px] text-slate-400 mt-0.5">{{ $appr->approved_at->format('d/m') }}</p>
-                                        @endif
                                     </div>
                                 </div>
-                                @endforeach
-                            </div>
-                        </div>
-
-                    </div>
-                    @endforeach
-
-                </div>
-                @endif
-            </div>
-
-            {{-- ─────────────────────────────
-             RIGHT: INFO ARAHAN (sticky)
-        ───────────────────────────── --}}
-            <div class="space-y-4 lg:sticky lg:top-6">
-
-                {{-- Info Card --}}
-                <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-                    <div class="px-5 py-4 bg-slate-900 flex items-center justify-between">
-                        <p class="text-[10px] font-black text-white uppercase tracking-wider">Informasi Arahan</p>
-                    </div>
-                    <div class="p-5 space-y-4">
-                        <div>
-                            <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Bidang</p>
-                            <p class="text-sm font-bold text-slate-800">{{ $arahan->bidang->name ?? '-' }}</p>
-                        </div>
-                        <div>
-                            <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Tanggal Target</p>
-                            <p class="text-sm font-bold text-slate-800">{{ $arahan->tanggal_target ? $arahan->tanggal_target->format('d M Y') : '-' }}</p>
-                        </div>
-                        <div>
-                            <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">PIC Unit Kerja</p>
-                            <div class="space-y-1">
-                                @forelse($arahan->pics as $pic)
-                                <p class="text-sm font-bold text-slate-800">{{ $pic->name }}</p>
-                                @empty
-                                <p class="text-sm text-slate-400">-</p>
-                                @endforelse
-                            </div>
-                        </div>
-                        {{-- Di bagian Sidebar Kanan --}}
-                        <div>
-                            <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Status Arahan</p>
-                            @if($isGlobalTD)
-                            <span class="px-2.5 py-1 bg-slate-100 text-slate-600 rounded-lg text-[9px] font-black uppercase">TD - Tidak Ditindaklanjuti</span>
-                            @elseif($isGlobalSelesai)
-                            <span class="px-2.5 py-1 bg-emerald-50 text-emerald-700 rounded-lg text-[9px] font-black uppercase">✓ Selesai</span>
-                            @else
-                            <span class="px-2.5 py-1 bg-amber-50 text-amber-700 rounded-lg text-[9px] font-black uppercase">Belum Selesai</span>
-                            @endif
-                        </div>
-                    </div>
-                </div>
-
-                {{-- Ringkasan per Unit --}}
-                @if($tlPerUnit->isNotEmpty())
-                <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-                    <div class="px-5 py-4 border-b border-slate-100">
-                        <p class="text-[10px] font-black text-slate-800 uppercase tracking-wider">Ringkasan Unit</p>
-                    </div>
-                    <div class="divide-y divide-slate-50">
-                        @foreach($tlPerUnit as $unitId => $tlList)
-                        @php
-                        $firstTl = $tlList->sortByDesc('created_at')->first();
-                        $unitName = $firstTl->unitKerja->name ?? 'Unit #'.$unitId;
-                        $tlStatus = $firstTl->status ?? 'pending';
-                        $tabIdx = $loop->index;
-                        @endphp
-                        <button onclick="switchTab({{ $tabIdx }})"
-                            class="w-full px-5 py-3 flex items-center justify-between hover:bg-slate-50 transition text-left">
-                            <div class="flex items-center gap-2 min-w-0">
-                                <div class="w-2 h-2 rounded-full flex-shrink-0
-                                {{ $tlStatus === 'approved' ? 'bg-emerald-500' : ($tlStatus === 'rejected' ? 'bg-rose-500' : ($tlStatus === 'in_approval' ? 'bg-blue-500' : 'bg-amber-400')) }}">
-                                </div>
-                                <span class="text-xs font-bold text-slate-700 truncate">{{ $unitName }}</span>
-                            </div>
-                            <span class="text-[9px] font-black uppercase ml-2 flex-shrink-0
-                            {{ $tlStatus === 'approved' ? 'text-emerald-600' : ($tlStatus === 'rejected' ? 'text-rose-600' : ($tlStatus === 'in_approval' ? 'text-blue-600' : 'text-amber-600')) }}">
-                               {{ $tlStatus === 'approved' ? 'Selesai' : ($tlStatus === 'rejected' ? 'Revisi' : ($tlStatus === 'in_approval' ? 'Dalam Approval' : 'Pending')) }}
-                            </span>
-                        </button>
+                            </td>
+                            <td class="px-6 py-4 text-center">
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-{{ $badgeColor }}-50 text-{{ $badgeColor }}-700 border border-{{ $badgeColor }}-100 rounded-full text-[10px] font-black uppercase tracking-tighter">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-{{ $badgeColor }}-600"></span>
+                                    {{ $badgeIcon }} {{ $badgeText }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 text-right">
+                                <button onclick="showDetail({{ $loop->index }})" class="inline-flex items-center gap-1.5 px-4 py-2 bg-slate-100 text-slate-600 hover:text-blue-600 rounded-xl transition hover:bg-blue-50 text-xs font-black uppercase tracking-wider">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                    </svg>
+                                    Lihat Detail
+                                </button>
+                            </td>
+                        </tr>
                         @endforeach
+                    </tbody>
+                </table>
+                @else
+                {{-- Empty State yang Lebih Bagus --}}
+                <div class="py-16 px-4 text-center">
+                    <div class="max-w-sm mx-auto">
+                        <div class="w-24 h-24 mx-auto mb-6 relative">
+                            <div class="absolute inset-0 bg-gradient-to-br from-slate-100 to-slate-200 rounded-full animate-pulse"></div>
+                            <div class="absolute inset-0 flex items-center justify-center">
+                                <svg class="w-12 h-12 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                            </div>
+                        </div>
+                        <h4 class="text-lg font-black text-slate-700 mb-2">Belum Ada Laporan</h4>
+                        <p class="text-sm text-slate-400 leading-relaxed">
+                            Belum ada unit kerja yang melaporkan tindak lanjut<br>
+                            untuk arahan ini.
+                        </p>
+                        <div class="mt-6 inline-flex items-center gap-2 px-4 py-2 bg-slate-50 rounded-full">
+                            <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Menunggu Input dari Unit Kerja</span>
+                        </div>
                     </div>
                 </div>
                 @endif
-
             </div>
-
         </div>
     </div>
 
+    {{-- MODAL DETAIL LAPORAN --}}
+    <div id="detailModal" class="fixed inset-0 bg-slate-900/70 hidden items-center justify-center z-[100] backdrop-blur-sm p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[85vh] flex flex-col overflow-hidden">
+            <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-900 flex-shrink-0">
+                <h3 id="modalTitle" class="text-sm font-black text-white uppercase tracking-wider">Detail Laporan Unit</h3>
+                <button onclick="closeDetail()" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/10 text-slate-400 hover:text-white transition">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <div id="modalContent" class="overflow-y-auto flex-1 p-6">
+                {{-- Content diisi JavaScript --}}
+            </div>
+        </div>
+    </div>
+
+    @php
+    $laporanDataArray = [];
+    foreach($tlPerUnit as $index => $tlList) {
+    $tlSorted = $tlList->sortByDesc('created_at');
+    $latestTl = $tlSorted->first();
+    $unitName = $latestTl->unitKerja->name ?? 'Unit #' . $index;
+    $bulanIndonesia = [1=>'Januari',2=>'Februari',3=>'Maret',4=>'April',5=>'Mei',6=>'Juni',7=>'Juli',8=>'Agustus',9=>'September',10=>'Oktober',11=>'November',12=>'Desember'];
+    $bulan = $latestTl->periode_bulan ? ($bulanIndonesia[$latestTl->periode_bulan] ?? '-') : '-';
+
+    // Ambil TD Approval (keputusan TD)
+    $tdApproval = $latestTl->approvals()
+    ->where('status', 'rejected')
+    ->where('note', 'like', '%Ditetapkan sebagai TD%')
+    ->latest()
+    ->first();
+
+    // Ambil Revisi Note (bukan TD)
+    $revisiNote = $latestTl->approvals()
+    ->where('status', 'rejected')
+    ->where('note', 'not like', '%Ditetapkan sebagai TD%')
+    ->whereNotNull('note')
+    ->latest()
+    ->first();
+
+    $approvalsArray = [];
+    $approvals = $latestTl->approvals()->with('approver')->orderBy('stage')->get();
+    foreach($approvals as $a) {
+    $approvalsArray[] = [
+    'stage' => $a->stage,
+    'status' => $a->status,
+    'approved_at' => $a->approved_at ? $a->approved_at->format('d M Y H:i') : null,
+    'approver' => $a->approver->name ?? null,
+    'note' => $a->note ?? null,
+    'is_td' => str_contains($a->note ?? '', 'Ditetapkan sebagai TD')
+    ];
+    }
+
+    $laporanDataArray[] = [
+    'unitName' => $unitName,
+    'periode' => $bulan . ' ' . $latestTl->periode_tahun,
+    'tindakLanjut' => $latestTl->tindak_lanjut,
+    'kendala' => $latestTl->kendala ?? '',
+    'keterangan' => $latestTl->keterangan ?? '',
+    'evidenceUrl' => $latestTl->evidence_url ? Storage::url($latestTl->evidence_url) : '',
+    'createdAt' => $latestTl->created_at->format('d M Y H:i'),
+    'creator' => $latestTl->creator->name ?? '-',
+    'status' => $latestTl->status,
+    'tdNote' => $tdApproval->note ?? '',
+    'tdBy' => $tdApproval->approver->name ?? '',
+    'tdAt' => $tdApproval && $tdApproval->approved_at ? $tdApproval->approved_at->format('d M Y H:i') : '',
+    'revisiNote' => $revisiNote->note ?? '',
+    'revisiBy' => $revisiNote->approver->name ?? '',
+    'revisiAt' => $revisiNote && $revisiNote->approved_at ? $revisiNote->approved_at->format('d M Y H:i') : '',
+    'approvals' => $approvalsArray
+    ];
+    }
+    @endphp
+
     <script>
-        function switchTab(idx) {
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-            document.querySelectorAll('.tab-btn').forEach(el => {
-                el.classList.remove('border-slate-900', 'text-slate-900', 'bg-slate-50');
-                el.classList.add('border-transparent', 'text-slate-400');
+        const laporanData = @json($laporanDataArray);
+
+        function showDetail(idx) {
+            const data = laporanData[idx];
+            if (!data) return;
+
+            document.getElementById('modalTitle').innerHTML = `Detail Laporan - ${data.unitName}`;
+
+            let approvalsHtml = '';
+            const stages = ['Atasan Auditi', 'Tim Monitoring', 'Pengendali Teknis', 'Pengendali Mutu', 'Penanggung Jawab'];
+            stages.forEach((stageName, stageNum) => {
+                const approval = data.approvals?.find(a => a.stage === stageNum + 1);
+                const status = approval?.status || 'pending';
+                const isApproved = status === 'approved';
+                const isRejected = status === 'rejected';
+                const isPending = status === 'pending';
+                const approvedAt = approval?.approved_at || '';
+                const note = approval?.note || '';
+                const isTD = approval?.is_td || false;
+
+                approvalsHtml += `
+                <div class="flex-1 flex flex-col items-center">
+                    <div class="relative flex items-center w-full">
+                        ${stageNum > 0 ? `<div class="flex-1 h-px ${isApproved ? 'bg-emerald-400' : 'bg-slate-200'}"></div>` : ''}
+                        <div class="w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center border-2
+                            ${isApproved ? 'bg-emerald-500 border-emerald-500' : (isRejected && isTD ? 'bg-slate-500 border-slate-500' : (isRejected ? 'bg-rose-500 border-rose-500' : (isPending ? 'bg-slate-900 border-slate-900' : 'bg-white border-slate-200')))}">
+                            ${isApproved ? '<svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>' : (isRejected && isTD ? '<svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>' : (isRejected ? '<svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"/></svg>' : (isPending ? '<div class="w-2 h-2 rounded-full bg-white animate-pulse"></div>' : `<span class="text-[10px] font-black text-slate-400">${stageNum + 1}</span>`)))}
+                        </div>
+                        ${stageNum < 4 ? `<div class="flex-1 h-px bg-slate-200"></div>` : ''}
+                    </div>
+                    <div class="mt-2 text-center">
+                        <p class="text-[9px] font-black uppercase tracking-wide ${isApproved ? 'text-emerald-600' : (isPending ? 'text-slate-900' : 'text-slate-400')}">${stageName}</p>
+                        ${approvedAt ? `<p class="text-[8px] text-slate-400 mt-0.5">${approvedAt}</p>` : ''}
+                        ${isRejected && note ? `<p class="text-[9px] ${isTD ? 'text-slate-500' : 'text-rose-500'} mt-1 italic truncate max-w-[80px]">"${escapeHtml(note.substring(0, 30))}"</p>` : ''}
+                    </div>
+                </div>`;
             });
-            document.getElementById('tab-content-' + idx).classList.remove('hidden');
-            const btn = document.getElementById('tab-btn-' + idx);
-            btn.classList.remove('border-transparent', 'text-slate-400');
-            btn.classList.add('border-slate-900', 'text-slate-900', 'bg-slate-50');
+
+            // Status Badge untuk modal berdasarkan status per unit
+            const statusBadge = data.status === 'approved' ? '<span class="px-2 py-1 bg-emerald-50 text-emerald-700 rounded text-[10px] font-bold">✓ Selesai</span>' :
+                (data.status === 'rejected' ? '<span class="px-2 py-1 bg-orange-50 text-orange-700 rounded text-[10px] font-bold">↺ Perlu Revisi</span>' :
+                    (data.status === 'in_approval' ? '<span class="px-2 py-1 bg-blue-50 text-blue-700 rounded text-[10px] font-bold">⏳ Dalam Approval</span>' :
+                        (data.status === 'td' ? '<span class="px-2 py-1 bg-slate-100 text-slate-600 rounded text-[10px] font-bold">✗ TD - Tidak Ditindaklanjuti</span>' :
+                            '<span class="px-2 py-1 bg-amber-50 text-amber-700 rounded text-[10px] font-bold">⏰ Pending</span>')));
+
+            // Catatan TD atau Revisi
+            let catatanHtml = '';
+            if (data.tdNote) {
+                catatanHtml = `
+                <div class="mb-4 p-4 bg-slate-100 border border-slate-300 rounded-xl">
+                    <div class="flex items-center gap-2 mb-2">
+                        <p class="text-[9px] font-black text-slate-600 uppercase tracking-wider">Keputusan Final: Tidak Dapat Ditindaklanjuti (TD)</p>
+                    </div>
+                    <p class="text-sm text-slate-700 italic mb-2">"${escapeHtml(data.tdNote)}"</p>
+                    <p class="text-[10px] text-slate-500 mt-1">— ${data.tdBy}, ${data.tdAt}</p>
+                </div>`;
+            } else if (data.revisiNote) {
+                catatanHtml = `
+                <div class="mb-4 p-4 bg-rose-50 border border-rose-200 rounded-xl">
+                    <div class="flex items-center gap-2 mb-2">
+                        <p class="text-[9px] font-black text-rose-500 uppercase tracking-wider">Catatan Revisi</p>
+                    </div>
+                    <p class="text-sm text-rose-700 italic mb-2">"${escapeHtml(data.revisiNote)}"</p>
+                    <p class="text-[10px] text-rose-400 mt-1">— ${data.revisiBy}, ${data.revisiAt}</p>
+                </div>`;
+            }
+
+            document.getElementById('modalContent').innerHTML = `
+                <div class="grid grid-cols-2 gap-6 mb-6">
+                    <div>
+                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-wider mb-1">Unit Kerja</p>
+                        <p class="text-sm font-bold text-slate-800">${escapeHtml(data.unitName)}</p>
+                    </div>
+                    <div>
+                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-wider mb-1">Periode Laporan</p>
+                        <p class="text-sm font-bold text-slate-800">${escapeHtml(data.periode)}</p>
+                    </div>
+                    <div>
+                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-wider mb-1">Tanggal Input</p>
+                        <p class="text-sm font-bold text-slate-800">${data.createdAt}</p>
+                    </div>
+                    <div>
+                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-wider mb-1">Status Laporan</p>
+                        ${statusBadge}
+                    </div>
+                </div>
+                <div class="mb-4">
+                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-wider mb-1">Uraian Tindak Lanjut</p>
+                    <div class="p-4 bg-slate-50 rounded-xl border border-slate-100">
+                        <p class="text-sm text-slate-700 leading-relaxed">${escapeHtml(data.tindakLanjut)}</p>
+                    </div>
+                </div>
+                ${data.kendala ? `
+                <div class="mb-4">
+                    <p class="text-[9px] font-black text-rose-400 uppercase tracking-wider mb-1">Kendala</p>
+                    <div class="p-4 bg-rose-50 rounded-xl border border-rose-100">
+                        <p class="text-sm text-slate-700">${escapeHtml(data.kendala)}</p>
+                    </div>
+                </div>` : ''}
+                ${data.keterangan ? `
+                <div class="mb-4">
+                    <p class="text-[9px] font-black text-blue-400 uppercase tracking-wider mb-1">Keterangan Tambahan</p>
+                    <div class="p-4 bg-blue-50 rounded-xl border border-blue-100">
+                        <p class="text-sm text-slate-700">${escapeHtml(data.keterangan)}</p>
+                    </div>
+                </div>` : ''}
+                ${data.evidenceUrl ? `
+                <div class="mb-4">
+                    <a href="${data.evidenceUrl}" target="_blank" class="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-600 rounded-xl text-xs font-bold">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>
+                        Lihat Bukti Pendukung
+                    </a>
+                </div>` : ''}
+                ${catatanHtml}
+                <div class="pt-4 border-t border-slate-100">
+                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-wider mb-4">Riwayat Approval</p>
+                    <div class="flex items-start gap-0">
+                        ${approvalsHtml}
+                    </div>
+                </div>
+                <div class="pt-4 text-right border-t border-slate-100 mt-4">
+                    <p class="text-[10px] text-slate-400">Diinput oleh: ${escapeHtml(data.creator)}</p>
+                </div>
+            `;
+
+            document.getElementById('detailModal').classList.remove('hidden');
+            document.getElementById('detailModal').classList.add('flex');
         }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/[&<>]/g, function(m) {
+                if (m === '&') return '&amp;';
+                if (m === '<') return '&lt;';
+                if (m === '>') return '&gt;';
+                return m;
+            });
+        }
+
+        function closeDetail() {
+            document.getElementById('detailModal').classList.add('hidden');
+            document.getElementById('detailModal').classList.remove('flex');
+        }
+
+        document.getElementById('detailModal').addEventListener('click', function(e) {
+            if (e.target === this) closeDetail();
+        });
     </script>
 </x-app-layout>

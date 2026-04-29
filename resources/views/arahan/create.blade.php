@@ -27,22 +27,7 @@
                             <span class="flex h-2 w-2 rounded-full bg-blue-500 animate-pulse"></span>
                             <p class="text-[10px] font-black uppercase tracking-[0.2em] text-blue-400">Konteks Keputusan Aktif</p>
                         </div>
-                        <h3 class="text-2xl md:text-3xl font-black uppercase tracking-tight">{{ $keputusanSelected->nomor_keputusan ?? '-' }}</h3>
-                        <div class="flex items-center mt-3 space-x-4 text-slate-400 font-bold text-xs uppercase tracking-wider">
-                            <span class="flex items-center">
-                                <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                    <path d="M7 3a1 1 0 000 2h6a1 1 0 100-2H7zM4 7a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zM2 11a2 2 0 012-2h12a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4z"></path>
-                                </svg>
-                                ID: #{{ $keputusanSelected->id }}
-                            </span>
-                            <span class="w-1.5 h-1.5 bg-slate-700 rounded-full"></span>
-                            <span class="flex items-center">
-                                <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                    <path d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z"></path>
-                                </svg>
-                                Tahun: {{ $keputusanSelected->periode_year }}
-                            </span>
-                        </div>
+                        <h3 class="text-2xl md:text-3xl font-black uppercase tracking-tight">RUPS {{ $keputusanSelected->periode_year }}</h3>
                     </div>
                     <div class="px-5 py-2.5 bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl text-[10px] font-black uppercase tracking-widest self-start md:self-center">
                         Status: <span class="text-blue-300">{{ $keputusanSelected->status }}</span>
@@ -261,20 +246,94 @@
 
                         @if($existingArahan->count() > 0 && isset($keputusanSelected))
                         <div class="p-6 bg-slate-50 border-t border-slate-100">
-                            <form action="{{ route('keputusan.finalize', $keputusanSelected->id) }}" method="POST">
-                                @csrf
-                                <button type="submit"
-                                    class="w-full bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-black py-4 rounded-xl shadow-lg shadow-emerald-100 transition-all uppercase tracking-[0.1em] flex items-center justify-center group"
-                                    onclick="return confirm('Kirim semua arahan ini sekarang?')">
-                                    <span class="mr-2 transform group-hover:scale-125 transition-transform">🚀</span>
-                                    Finalisasi & Kirim
-                                </button>
-                            </form>
+                            {{-- Tombol Finalisasi dengan Modal --}}
+                            <button type="button" id="btnFinalize"
+                                class="w-full bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-black py-4 rounded-xl shadow-lg shadow-emerald-100 transition-all uppercase tracking-[0.1em] flex items-center justify-center group">
+                                <span class="mr-2 transform group-hover:scale-125 transition-transform">🚀</span>
+                                Finalisasi & Kirim
+                            </button>
                         </div>
                         @endif
                     </div>
                 </div>
 
+            </div>
+        </div>
+    </div>
+
+    {{-- MODAL KONFIRMASI FINALISASI --}}
+    <div id="modalFinalize" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-black/60 backdrop-blur-sm transition-all duration-300">
+        <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full transform transition-all duration-300 scale-95 opacity-0" id="modalFinalizeContent">
+            
+            {{-- Header dengan Icon --}}
+            <div class="relative bg-gradient-to-r from-emerald-600 to-teal-600 rounded-t-3xl p-6 text-center">
+                <div class="absolute -bottom-8 left-1/2 -translate-x-1/2">
+                    <div class="w-16 h-16 bg-white rounded-2xl rotate-45 shadow-lg flex items-center justify-center">
+                        <div class="-rotate-45">
+                            <svg class="w-8 h-8 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+                <h3 class="text-xl font-black text-white uppercase tracking-tight pt-2">Finalisasi Arahan</h3>
+            </div>
+
+            {{-- Body Modal --}}
+            <div class="pt-12 pb-6 px-6 text-center">
+                <p class="text-slate-600 text-sm mb-6">
+                    Anda akan memfinalisasi <span class="font-black text-emerald-600 text-lg">{{ $existingArahan->count() }}</span> butir arahan untuk:
+                </p>
+                
+                {{-- Ringkasan Keputusan --}}
+                <div class="bg-slate-100 rounded-2xl p-4 mb-6">
+                    <div class="text-xs text-slate-500 uppercase tracking-wider mb-1">Periode RUPS</div>
+                    <div class="text-2xl font-black text-slate-800">{{ $keputusanSelected->periode_year ?? '-' }}</div>
+                </div>
+
+                {{-- Daftar Ringkas Arahan --}}
+                <div class="text-left mb-6">
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-3">📋 Butir Arahan yang akan dikirim:</p>
+                    <div class="max-h-48 overflow-y-auto space-y-2 pr-1 custom-scrollbar">
+                        @foreach($existingArahan->take(5) as $index => $ea)
+                        <div class="flex items-start gap-2 text-xs p-2 bg-slate-50 rounded-lg">
+                            <span class="flex-shrink-0 w-5 h-5 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center text-[10px] font-black">{{ $index + 1 }}</span>
+                            <span class="text-slate-600 line-clamp-2">{{ Str::limit($ea->strategi, 60) }}</span>
+                        </div>
+                        @endforeach
+                        @if($existingArahan->count() > 5)
+                        <div class="text-center text-xs text-slate-400 italic pt-1">
+                            + {{ $existingArahan->count() - 5 }} arahan lainnya
+                        </div>
+                        @endif
+                    </div>
+                </div>
+
+                {{-- Warning Box --}}
+                <div class="bg-amber-50 border border-amber-200 rounded-xl p-3 text-left">
+                    <div class="flex items-start gap-2">
+                        <svg class="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                        </svg>
+                        <div class="text-[10px] text-amber-800">
+                            <p class="font-bold">Perhatian!</p>
+                            <p>Setelah finalisasi, arahan akan dikirim ke seluruh PIC dan tidak dapat diubah kembali.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Footer Modal --}}
+            <div class="flex gap-3 p-6 bg-slate-50 rounded-b-3xl">
+                <button type="button" id="modalFinalizeCancel" class="flex-1 px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-600 hover:bg-slate-100 transition active:scale-95">
+                    Batal
+                </button>
+                <form id="finalizeForm" action="{{ route('keputusan.finalize', $keputusanSelected->id) }}" method="POST" class="flex-1">
+                    @csrf
+                    <button type="submit" id="finalizeSubmitBtn" class="w-full px-4 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-xl text-sm font-bold hover:from-emerald-700 hover:to-teal-700 transition-all shadow-lg shadow-emerald-200 active:scale-95">
+                        Ya, Finalisasi & Kirim
+                    </button>
+                </form>
             </div>
         </div>
     </div>
@@ -297,22 +356,18 @@
                     if (checked) {
                         if (!this.selectedPics.includes(id)) {
                             this.selectedPics.push(id);
-                            console.log('PIC added:', id, 'Total:', this.selectedPics.length);
                         }
                     } else {
                         this.selectedPics = this.selectedPics.filter(i => i !== id);
-                        console.log('PIC removed:', id, 'Total:', this.selectedPics.length);
                     }
                 },
 
                 removePic(id) {
                     this.selectedPics = this.selectedPics.filter(i => i !== id);
-                    console.log('PIC removed via badge:', id);
                 },
 
                 resetAll() {
                     this.selectedPics = [];
-                    console.log('All PICs reset');
                 },
 
                 getName(id) {
@@ -329,6 +384,64 @@
                 form.submit();
             }
         }
+
+        // ========== MODAL FINALIZE ==========
+        const modalFinalize = document.getElementById('modalFinalize');
+        const modalFinalizeContent = document.getElementById('modalFinalizeContent');
+        const btnFinalize = document.getElementById('btnFinalize');
+        const modalFinalizeCancel = document.getElementById('modalFinalizeCancel');
+        const finalizeForm = document.getElementById('finalizeForm');
+        const finalizeSubmitBtn = document.getElementById('finalizeSubmitBtn');
+
+        function showModal() {
+            modalFinalize.classList.remove('hidden');
+            modalFinalize.classList.add('flex');
+            void modalFinalize.offsetHeight;
+            modalFinalizeContent.classList.remove('scale-95', 'opacity-0');
+            modalFinalizeContent.classList.add('scale-100', 'opacity-100');
+        }
+
+        function hideModal() {
+            modalFinalizeContent.classList.remove('scale-100', 'opacity-100');
+            modalFinalizeContent.classList.add('scale-95', 'opacity-0');
+            setTimeout(() => {
+                modalFinalize.classList.add('hidden');
+                modalFinalize.classList.remove('flex');
+            }, 200);
+        }
+
+        if (btnFinalize) {
+            btnFinalize.addEventListener('click', showModal);
+        }
+
+        if (modalFinalizeCancel) {
+            modalFinalizeCancel.addEventListener('click', hideModal);
+        }
+
+        modalFinalize.addEventListener('click', function(e) {
+            if (e.target === modalFinalize) {
+                hideModal();
+            }
+        });
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && modalFinalize && !modalFinalize.classList.contains('hidden')) {
+                hideModal();
+            }
+        });
+
+        // Loading state saat submit finalisasi
+        if (finalizeSubmitBtn) {
+            finalizeForm.addEventListener('submit', function() {
+                finalizeSubmitBtn.disabled = true;
+                finalizeSubmitBtn.innerHTML = `
+                    <svg class="inline w-4 h-4 mr-2 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                    </svg>
+                    Memproses...
+                `;
+            });
+        }
     </script>
 
     <form id="deleteArahanForm" method="POST" class="hidden">
@@ -342,6 +455,12 @@
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #cbd5e1; }
+        .line-clamp-2 {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
     </style>
     @endpush
 </x-app-layout>

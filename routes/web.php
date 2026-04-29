@@ -11,7 +11,7 @@ use App\Http\Controllers\RoleController;
 use App\Http\Controllers\UnitKerjaController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\ExportController;
-
+use App\Http\Controllers\BidangController;
 
 
 /*
@@ -75,8 +75,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::put('/{unitKerja}', [UnitKerjaController::class, 'update'])->name('update');
         Route::delete('/{unitKerja}', [UnitKerjaController::class, 'destroy'])->name('destroy');
         Route::get('/{unitKerja}/users', [UnitKerjaController::class, 'getUsers'])->name('get-users');
+
+        
     });
 
+    Route::resource('bidang', BidangController::class);
     // --- User Management ---
     Route::middleware('permission:manage_users')->prefix('users')->name('users.')->group(function () {
         Route::get('/', [UserController::class, 'index'])->name('index');
@@ -111,6 +114,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/{tindaklanjut}', [ApprovalController::class, 'show'])->name('show'); // Tambahkan ini
         Route::post('/{tindaklanjut}/approve', [ApprovalController::class, 'approve'])->name('approve');
         Route::post('/{tindaklanjut}/reject', [ApprovalController::class, 'reject'])->name('reject');
+        
     });
 
 

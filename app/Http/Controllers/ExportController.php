@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\TindakLanjutExport;
+use Maatwebsite\Excel\Facades\Excel;
 use App\Models\Arahan;
 use App\Models\Keputusan;
 use App\Models\TindakLanjut;
@@ -11,7 +13,6 @@ use Illuminate\Support\Facades\Auth;
 
 class ExportController extends Controller
 {
-    // ExportController@index — ubah jadi load data juga
     public function index(Request $request)
     {
         /** @var \App\Models\User $user */
@@ -42,7 +43,6 @@ class ExportController extends Controller
             )->orderByDesc('periode_year')->get();
         }
 
-        // Query data tabel — sama dengan download tapi paginate
         $query = TindakLanjut::with([
             'arahan.keputusan',
             'arahan.unitKerja',
@@ -92,25 +92,42 @@ class ExportController extends Controller
     }
 
     public function download(Request $request)
-    {
-        /** @var \App\Models\User $user */
-        $user    = Auth::user();
-        $isAdmin = $user->hasRole([
-            'Admin',
-            'Tim Monitoring',
-            'Penanggung Jawab',
-            'Pengendali Mutu',
-            'Pengendali Teknis'
-        ]);
+{
+    /** @var \App\Models\User $user */
+    $user    = Auth::user();
+    $isAdmin = $user->hasRole([
+        'Admin',
+        'Tim Monitoring',
+        'Penanggung Jawab',
+        'Pengendali Mutu',
+        'Pengendali Teknis'
+    ]);
 
-        $jenis = $request->get('jenis', 'tindaklanjut');
+    $jenis = $request->get('jenis', 'tindaklanjut');
 
-        if ($jenis === 'keputusan') {
-            return $this->exportKeputusan($request, $user, $isAdmin);
-        }
-
-        return $this->exportTindakLanjut($request, $user, $isAdmin);
+    if ($jenis === 'keputusan') {
+        return $this->exportKeputusanExcel($request, $user, $isAdmin);
     }
+
+    return $this->exportTindakLanjutExcel($request, $user, $isAdmin);
+}
+
+private function exportTindakLanjutExcel($request, $user, $isAdmin)
+{
+    $query = TindakLanjut::with([
+        'arahan.keputusan',
+        'arahan.unitKerja',
+        'unitKerja',
+        'creator',
+        'approvals.approver',
+    ]);
+
+    $data = $query->latest()->get();
+    $roleName = $user->getRoleNames()->first();
+    $filename = 'tindaklanjut_' . str_replace(' ', '_', $roleName) . '_' . now()->format('Ymd_His') . '.xlsx';
+
+    return Excel::download(new TindakLanjutExport($data, $isAdmin, $user), $filename);
+}
 
     private function exportTindakLanjut($request, $user, $isAdmin)
     {
@@ -122,7 +139,6 @@ class ExportController extends Controller
             'approvals.approver',
         ]);
 
-        // Filter role
         if ($isAdmin) {
             if ($request->filled('unit_kerja_id')) {
                 $query->where('unit_kerja_id', $request->unit_kerja_id);
@@ -134,12 +150,10 @@ class ExportController extends Controller
                 $query->where('unit_kerja_id', $request->unit_kerja_id);
             }
         } else {
-            // Auditi — hanya milik sendiri
             $query->where('unit_kerja_id', $user->unit_kerja_id)
                 ->where('created_by', $user->id);
         }
 
-        // Filter tambahan
         if ($request->filled('status')) {
             $query->where('status', $request->status);
         }
@@ -172,11 +186,8 @@ class ExportController extends Controller
             $file = fopen('php://output', 'w');
             fprintf($file, chr(0xEF) . chr(0xBB) . chr(0xBF));
 
-            // Kolom header sesuai role
             if ($isAdmin) {
                 fputcsv($file, [
-                    'No',
-                    'Nomor Keputusan',
                     'Periode Keputusan',
                     'Unit Kerja',
                     'Arahan/Strategi',
@@ -191,8 +202,7 @@ class ExportController extends Controller
                 ]);
             } elseif ($user->hasRole('Atasan Auditi')) {
                 fputcsv($file, [
-                    'No',
-                    'Nomor Keputusan',
+                   'Periode Keputusan',
                     'Unit Kerja',
                     'Arahan/Strategi',
                     'Bulan/Tahun Laporan',
@@ -204,8 +214,7 @@ class ExportController extends Controller
                 ]);
             } else {
                 fputcsv($file, [
-                    'No',
-                    'Nomor Keputusan',
+                   'Periode Keputusan',
                     'Arahan/Strategi',
                     'Bulan/Tahun Laporan',
                     'Uraian Tindak Lanjut',
@@ -228,7 +237,6 @@ class ExportController extends Controller
                 $lastNote        = $tl->approvals->whereNotNull('note')->sortByDesc('updated_at')->first();
                 $status          = $statusLabel[$tl->status] ?? $tl->status;
                 $periodelaporan  = $tl->periode_bulan . '/' . $tl->periode_tahun;
-                $nomorKeputusan  = $tl->arahan->keputusan->nomor_keputusan ?? '-';
                 $strategi        = $tl->arahan->strategi ?? '-';
                 $unitKerja       = $tl->unitKerja->name ?? '-';
                 $periode         = $tl->arahan->keputusan->periode_year ?? '-';
@@ -239,7 +247,6 @@ class ExportController extends Controller
                 if ($isAdmin) {
                     fputcsv($file, [
                         $i + 1,
-                        $nomorKeputusan,
                         $periode,
                         $unitKerja,
                         $strategi,
@@ -255,7 +262,6 @@ class ExportController extends Controller
                 } elseif ($user->hasRole('Atasan Auditi')) {
                     fputcsv($file, [
                         $i + 1,
-                        $nomorKeputusan,
                         $unitKerja,
                         $strategi,
                         $periodelaporan,
@@ -268,7 +274,6 @@ class ExportController extends Controller
                 } else {
                     fputcsv($file, [
                         $i + 1,
-                        $nomorKeputusan,
                         $strategi,
                         $periodelaporan,
                         $tl->tindak_lanjut,
@@ -328,7 +333,6 @@ class ExportController extends Controller
 
             fputcsv($file, [
                 'No',
-                'Nomor Keputusan',
                 'Periode',
                 'Status',
                 'Jumlah Arahan',
@@ -346,7 +350,6 @@ class ExportController extends Controller
             foreach ($data as $i => $kep) {
                 fputcsv($file, [
                     $i + 1,
-                    $kep->nomor_keputusan,
                     $kep->periode_year,
                     $statusLabel[$kep->status] ?? $kep->status,
                     $kep->arahan->count(),

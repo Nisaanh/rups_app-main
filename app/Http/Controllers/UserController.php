@@ -157,7 +157,7 @@ class UserController extends Controller
             'roles',
             'permissions',
             'keputusan',
-            'arahanPic',
+            'arahanSebagaiPIC',
             'tindakLanjut',
             'approvals'
         ]);
@@ -165,7 +165,7 @@ class UserController extends Controller
         // Get user statistics
         $stats = [
             'total_keputusan' => $user->keputusan()->count(),
-            'total_arahan' => $user->arahanPic()->count(),
+            'total_arahan' => $user->arahanSebagaiPIC()->count(),
             'total_tindak_lanjut' => $user->tindakLanjut()->count(),
             'total_approvals' => $user->approvals()->count(),
             'approved_approvals' => $user->approvals()->where('status', 'approved')->count(),
@@ -308,14 +308,14 @@ class UserController extends Controller
 
             // Check if user has related data
             $hasKeputusan = $user->keputusan()->exists();
-            $hasArahan = $user->arahanPic()->exists();
+            $hasArahan = $user->arahanSebagaiPIC()->exists();
             $hasTindakLanjut = $user->tindakLanjut()->exists();
             $hasApprovals = $user->approvals()->exists();
 
             if ($hasKeputusan || $hasArahan || $hasTindakLanjut || $hasApprovals) {
                 $messages = [];
                 if ($hasKeputusan) $messages[] = $user->keputusan()->count() . ' keputusan';
-                if ($hasArahan) $messages[] = $user->arahanPic()->count() . ' arahan';
+                if ($hasArahan) $messages[] = $user->arahanSebagaiPIC()->count() . ' arahan';
                 if ($hasTindakLanjut) $messages[] = $user->tindakLanjut()->count() . ' tindak lanjut';
                 if ($hasApprovals) $messages[] = $user->approvals()->count() . ' approval';
 
@@ -380,7 +380,7 @@ class UserController extends Controller
                 // Skip if user has related data
                 if (
                     $user->keputusan()->exists() ||
-                    $user->arahanPic()->exists() ||
+                    $user->arahanSebagaiPIC()->exists() ||
                     $user->tindakLanjut()->exists() ||
                     $user->approvals()->exists() ||
                     User::where('pic_unit_kerja_id', $userId)->exists()
@@ -701,7 +701,7 @@ class UserController extends Controller
 
         $stats = [
             'total_keputusan' => $user->keputusan()->count(),
-            'total_arahan' => $user->arahanPic()->count(),
+            'total_arahan' => $user->arahanSebagaiPIC()->count(),
             'total_tindak_lanjut' => $user->tindakLanjut()->count(),
             'total_approvals' => $user->approvals()->count(),
         ];

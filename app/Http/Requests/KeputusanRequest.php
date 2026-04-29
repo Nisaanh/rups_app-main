@@ -21,8 +21,6 @@ class KeputusanRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'nomor_keputusan' => 'required|string|max:255',
-          
             'periode_year'    => 'required|digits:4|integer|min:2020|max:' . (date('Y') + 1),
         ];
     }
@@ -33,8 +31,6 @@ class KeputusanRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'nomor_keputusan.required' => 'Nomor keputusan wajib diisi.',
-           
             'periode_year.required'    => 'Tahun periode wajib diisi.',
             'periode_year.digits'      => 'Tahun harus terdiri dari 4 angka.',
             'periode_year.min'         => 'Tahun periode minimal 2020.',

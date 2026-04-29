@@ -20,13 +20,6 @@
             <form action="{{ route('keputusan.store') }}" method="POST">
                 @csrf
                 <div class="p-10 space-y-8">
-                    {{-- Nomor Keputusan --}}
-                    <div>
-                        <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">Nomor Registrasi Keputusan</label>
-                        <input type="text" name="nomor_keputusan" value="{{ old('nomor_keputusan', $autoNumber) }}" 
-                               class="w-full px-5 py-4 rounded-2xl border-slate-200 bg-slate-50 focus:border-blue-500 focus:ring-blue-500 font-bold text-slate-800 transition" required>
-                        <p class="mt-2 text-[10px] text-slate-400 italic">Nomor ini digenerate otomatis oleh sistem, Anda dapat menyesuaikannya jika perlu.</p>
-                    </div>
 
                     {{-- Periode Tahun --}}
                     <div>

@@ -66,7 +66,6 @@
                 ];
                 $bulan = $approval->tindakLanjut->periode_bulan
                     ? ($bulanIndonesia[$approval->tindakLanjut->periode_bulan] ?? '-') : '-';
-                $approvedStages = $approval->tindakLanjut->approvals()->where('status','approved')->count();
             @endphp
 
             <div class="p-6 hover:bg-slate-50/40 transition-colors">
@@ -120,7 +119,7 @@
                             @endif
                         </div>
 
-                        {{-- Kendala + Keterangan (compact) --}}
+                        {{-- Kendala + Keterangan --}}
                         @if($approval->tindakLanjut->kendala || $approval->tindakLanjut->keterangan)
                         <div class="flex flex-wrap gap-2">
                             @if($approval->tindakLanjut->kendala)
@@ -144,27 +143,6 @@
                         </div>
                         @endif
 
-                        {{-- Stage Progress --}}
-                        <!-- <div class="flex items-center gap-3">
-                            <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest flex-shrink-0">Progress:</span>
-                            <div class="flex items-center gap-1">
-                                @for($s = 1; $s <= 5; $s++)
-                                <div class="w-6 h-6 rounded-full flex items-center justify-center text-[8px] font-black
-                                    {{ $s < $approval->stage ? 'bg-emerald-500 text-white' : ($s == $approval->stage ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-400') }}">
-                                    @if($s < $approval->stage)
-                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
-                                        </svg>
-                                    @else
-                                        {{ $s }}
-                                    @endif
-                                </div>
-                                @if($s < 5)
-                                <div class="w-3 h-px {{ $s < $approval->stage ? 'bg-emerald-300' : 'bg-slate-200' }}"></div>
-                                @endif
-                                @endfor
-                            </div>
-                        </div> -->
                     </div>
 
                     {{-- Right: Actions --}}
@@ -256,6 +234,9 @@
                 </thead>
                 <tbody class="divide-y divide-slate-50">
                     @foreach($approvalHistory as $history)
+                    @php
+                        $isTD = str_contains($history->note ?? '', 'Ditetapkan sebagai TD');
+                    @endphp
                     <tr class="hover:bg-slate-50/40 transition-colors">
                         <td class="px-6 py-4">
                             <p class="text-sm font-bold text-slate-800">{{ $history->tindakLanjut->unitKerja->name ?? '-' }}</p>
@@ -269,6 +250,11 @@
                             <span class="inline-flex items-center gap-1 px-2.5 py-1 bg-emerald-50 text-emerald-700 rounded-lg text-[9px] font-black uppercase border border-emerald-100">
                                 <svg class="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
                                 Disetujui
+                            </span>
+                            @elseif($isTD)
+                            <span class="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-100 text-slate-600 rounded-lg text-[9px] font-black uppercase border border-slate-200">
+                                <svg class="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" clip-rule="evenodd"/></svg>
+                                TD - Tidak Ditindaklanjuti
                             </span>
                             @else
                             <span class="inline-flex items-center gap-1 px-2.5 py-1 bg-rose-50 text-rose-700 rounded-lg text-[9px] font-black uppercase border border-rose-100">
@@ -313,7 +299,6 @@
 <div id="detailModal" class="fixed inset-0 bg-slate-900/70 hidden items-center justify-center z-[100] backdrop-blur-sm p-4">
     <div class="bg-white rounded-2xl shadow-2xl w-full max-w-xl max-h-[85vh] flex flex-col overflow-hidden">
 
-        {{-- Modal Header --}}
         <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-900 flex-shrink-0">
             <div>
                 <h3 class="text-sm font-black text-white uppercase tracking-wider">Detail Laporan</h3>
@@ -326,16 +311,12 @@
             </button>
         </div>
 
-        {{-- Modal Body --}}
         <div class="overflow-y-auto flex-1 p-6 space-y-4">
-
-            {{-- Uraian --}}
             <div>
                 <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-2">Uraian Tindak Lanjut</p>
                 <p id="detailModalUraian" class="text-sm text-slate-700 leading-relaxed bg-slate-50 rounded-xl p-4 border border-slate-100"></p>
             </div>
 
-            {{-- Kendala --}}
             <div id="detailKendalaWrapper" class="hidden">
                 <p class="text-[9px] font-bold text-rose-400 uppercase tracking-widest mb-2 flex items-center gap-1">
                     <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
@@ -346,7 +327,6 @@
                 <p id="detailModalKendala" class="text-sm text-slate-700 leading-relaxed bg-rose-50 rounded-xl p-4 border border-rose-100"></p>
             </div>
 
-            {{-- Keterangan --}}
             <div id="detailKeteranganWrapper" class="hidden">
                 <p class="text-[9px] font-bold text-blue-400 uppercase tracking-widest mb-2 flex items-center gap-1">
                     <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
@@ -356,10 +336,8 @@
                 </p>
                 <p id="detailModalKeterangan" class="text-sm text-slate-700 leading-relaxed bg-blue-50 rounded-xl p-4 border border-blue-100"></p>
             </div>
-
         </div>
 
-        {{-- Modal Footer --}}
         <div class="px-6 py-4 border-t border-slate-100 bg-slate-50/60 flex justify-end flex-shrink-0">
             <button onclick="closeDetailModal()" class="px-5 py-2.5 bg-slate-900 text-white text-[10px] font-black uppercase tracking-wider rounded-xl hover:bg-slate-800 transition">
                 Tutup
@@ -384,13 +362,23 @@
             @csrf
             <div class="space-y-2">
                 <label class="flex items-center gap-3 p-4 border-2 border-slate-100 rounded-xl cursor-pointer hover:bg-slate-50 transition has-[:checked]:border-emerald-500 has-[:checked]:bg-emerald-50/50">
-                    <input type="radio" id="optionLanjut" name="result" value="lanjut" checked class="w-4 h-4 text-emerald-600 focus:ring-emerald-500" onchange="toggleTDNote()">
+                    <input type="radio" id="optionLanjut" name="result" value="lanjut" checked class="w-4 h-4 text-emerald-600 focus:ring-emerald-500" onchange="toggleOtherOptions()">
                     <span id="labelLanjut" class="text-xs font-bold text-slate-700 uppercase tracking-wide">Lanjutkan ke Stage Berikutnya</span>
                 </label>
+               
                 <label id="optionTDWrapper" class="flex items-center gap-3 p-4 border-2 border-slate-100 rounded-xl cursor-pointer hover:bg-slate-50 transition has-[:checked]:border-slate-800 has-[:checked]:bg-slate-900/5">
-                    <input type="radio" id="optionTD" name="result" value="td" class="w-4 h-4 text-slate-800 focus:ring-slate-800" onchange="toggleTDNote()">
+                    <input type="radio" id="optionTD" name="result" value="td" class="w-4 h-4 text-slate-800 focus:ring-slate-800" onchange="toggleOtherOptions()">
                     <span class="text-xs font-bold text-slate-700 uppercase tracking-wide">TD — Tidak Dapat Ditindaklanjuti</span>
                 </label>
+            </div>
+
+            <div id="noteWrapper" class="hidden">
+                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">
+                    Catatan Revisi <span class="text-rose-500">*</span>
+                </label>
+                <textarea name="note" id="approveNote" rows="3"
+                    class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-rose-500 focus:border-rose-400 text-sm font-medium resize-none"
+                    placeholder="Jelaskan alasan revisi..."></textarea>
             </div>
 
             <div id="tdNoteWrapper" class="hidden">
@@ -453,127 +441,223 @@
     </div>
 </div>
 
-{{-- Data store untuk modal detail --}}
 <script>
-const tindakLanjutData = {
-    @foreach($pendingApprovals as $approval)
-    "{{ $approval->tindakLanjut->id }}": {
-        unit: "{{ addslashes($approval->tindakLanjut->unitKerja->name ?? 'N/A') }}",
-        uraian: "{{ addslashes($approval->tindakLanjut->tindak_lanjut) }}",
-        kendala: "{{ addslashes($approval->tindakLanjut->kendala ?? '') }}",
-        keterangan: "{{ addslashes($approval->tindakLanjut->keterangan ?? '') }}"
-    },
-    @endforeach
+document.addEventListener('DOMContentLoaded', function() {
+    const tindakLanjutData = {
+        @foreach($pendingApprovals as $approval)
+        "{{ $approval->tindakLanjut->id }}": {
+            unit: "{{ addslashes($approval->tindakLanjut->unitKerja->name ?? 'N/A') }}",
+            uraian: "{{ addslashes($approval->tindakLanjut->tindak_lanjut) }}",
+            kendala: "{{ addslashes($approval->tindakLanjut->kendala ?? '') }}",
+            keterangan: "{{ addslashes($approval->tindakLanjut->keterangan ?? '') }}"
+        },
+        @endforeach
+    };
+
+    // Make functions globally accessible
+    window.openDetailModal = function(id) {
+        const data = tindakLanjutData[id];
+        if (!data) {
+            console.error('Data not found for id:', id);
+            return;
+        }
+
+        document.getElementById('detailModalUnit').textContent = data.unit;
+        document.getElementById('detailModalUraian').textContent = data.uraian;
+
+        const kendalaWrapper = document.getElementById('detailKendalaWrapper');
+        if (data.kendala && data.kendala.trim() !== '') {
+            document.getElementById('detailModalKendala').textContent = data.kendala;
+            kendalaWrapper.classList.remove('hidden');
+        } else {
+            kendalaWrapper.classList.add('hidden');
+        }
+
+        const keteranganWrapper = document.getElementById('detailKeteranganWrapper');
+        if (data.keterangan && data.keterangan.trim() !== '') {
+            document.getElementById('detailModalKeterangan').textContent = data.keterangan;
+            keteranganWrapper.classList.remove('hidden');
+        } else {
+            keteranganWrapper.classList.add('hidden');
+        }
+
+        const modal = document.getElementById('detailModal');
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+    };
+
+    window.closeDetailModal = function() {
+        const modal = document.getElementById('detailModal');
+        modal.classList.remove('flex');
+        modal.classList.add('hidden');
+    };
+
+    // Approve Modal Functions
+    window.openApproveModal = function(id, stage) {
+        const isLast = parseInt(stage) === 5;
+        const isFirst = parseInt(stage) === 1;
+
+        const form = document.getElementById('approveForm');
+        if (form) form.action = `/approval/${id}/approve`;
+
+        const optionLanjut = document.getElementById('optionLanjut');
+        const labelLanjut = document.getElementById('labelLanjut');
+        const tdWrapper = document.getElementById('optionTDWrapper');
+        const submitBtn = document.getElementById('approveSubmitBtn');
+        const modalTitle = document.getElementById('approveModalTitle');
+        const modalDesc = document.getElementById('approveModalDesc');
+
+        // Reset
+        if (optionLanjut) optionLanjut.checked = true;
+        const optionTD = document.getElementById('optionTD');
+        if (optionTD) optionTD.checked = false;
+        
+        const rejectedRadio = document.querySelector('input[name="result"][value="rejected"]');
+        if (rejectedRadio) rejectedRadio.checked = false;
+        
+        const noteWrapper = document.getElementById('noteWrapper');
+        const tdNoteWrapper = document.getElementById('tdNoteWrapper');
+        if (noteWrapper) noteWrapper.classList.add('hidden');
+        if (tdNoteWrapper) tdNoteWrapper.classList.add('hidden');
+        
+        const approveNote = document.getElementById('approveNote');
+        const tdNote = document.getElementById('tdNote');
+        if (approveNote) approveNote.value = '';
+        if (tdNote) tdNote.value = '';
+        
+        const tdNoteError = document.getElementById('tdNoteError');
+        if (tdNoteError) tdNoteError.classList.add('hidden');
+
+        if (tdWrapper && isFirst) {
+            tdWrapper.style.display = 'none';
+        } else if (tdWrapper) {
+            tdWrapper.style.display = '';
+        }
+
+        if (isLast && optionLanjut) {
+            optionLanjut.value = 'selesai';
+            if (labelLanjut) labelLanjut.textContent = 'Selesai — Tindak Lanjut Dinyatakan Tuntas';
+            if (submitBtn) submitBtn.textContent = 'Konfirmasi Selesai';
+            if (modalTitle) modalTitle.textContent = 'Finalisasi Laporan';
+            if (modalDesc) modalDesc.textContent = 'Laporan akan dinyatakan selesai dan tidak dapat diubah lagi.';
+        } else if (optionLanjut) {
+            optionLanjut.value = 'lanjut';
+            if (labelLanjut) labelLanjut.textContent = 'Lanjutkan ke Stage Berikutnya';
+            if (submitBtn) submitBtn.textContent = 'Konfirmasi Setuju';
+            if (modalTitle) modalTitle.textContent = 'Konfirmasi Persetujuan';
+            if (modalDesc) modalDesc.textContent = 'Pastikan laporan sudah sesuai standar.';
+        }
+
+        const modal = document.getElementById('approveModal');
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+    };
+
+    window.closeApproveModal = function() {
+        const modal = document.getElementById('approveModal');
+        modal.classList.remove('flex');
+        modal.classList.add('hidden');
+    };
+
+    window.toggleOtherOptions = function() {
+        const selectedValue = document.querySelector('input[name="result"]:checked');
+        if (!selectedValue) return;
+        
+        const noteWrapper = document.getElementById('noteWrapper');
+        const tdNoteWrapper = document.getElementById('tdNoteWrapper');
+        
+        if (noteWrapper) noteWrapper.classList.add('hidden');
+        if (tdNoteWrapper) tdNoteWrapper.classList.add('hidden');
+        
+        if (selectedValue.value === 'rejected' && noteWrapper) {
+            noteWrapper.classList.remove('hidden');
+        } else if (selectedValue.value === 'td' && tdNoteWrapper) {
+            tdNoteWrapper.classList.remove('hidden');
+        }
+    };
+
+    window.submitApproveForm = function() {
+        const selectedValue = document.querySelector('input[name="result"]:checked');
+        if (!selectedValue) {
+            alert('Pilih salah satu opsi!');
+            return;
+        }
+        
+        if (selectedValue.value === 'rejected') {
+            const note = document.getElementById('approveNote');
+            if (!note || note.value.trim() === '') {
+                alert('Catatan revisi wajib diisi!');
+                if (note) note.focus();
+                return;
+            }
+        }
+        
+        if (selectedValue.value === 'td') {
+            const note = document.getElementById('tdNote');
+            if (!note || note.value.trim() === '') {
+                const error = document.getElementById('tdNoteError');
+                if (error) error.classList.remove('hidden');
+                if (note) note.focus();
+                return;
+            }
+        }
+        
+        const error = document.getElementById('tdNoteError');
+        if (error) error.classList.add('hidden');
+        
+        const form = document.getElementById('approveForm');
+        if (form) form.submit();
+    };
+
+    // Reject Modal Functions
+   // Reject Modal Functions - UPDATE
+window.openRejectModal = function(id) {
+    console.log('Opening reject modal for ID:', id); // Debug
+    
+    const noteField = document.getElementById('rejectNote');
+    if (noteField) noteField.value = '';
+    
+    const form = document.getElementById('rejectForm');
+    if (form) {
+        form.action = `/approval/${id}/reject`;
+        console.log('Form action set to:', form.action); // Debug
+    }
+    
+    const modal = document.getElementById('rejectModal');
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
 };
 
-// ── Detail Modal ──────────────────────────────
-function openDetailModal(id) {
-    const data = tindakLanjutData[id];
-    if (!data) return;
-
-    document.getElementById('detailModalUnit').textContent = data.unit;
-    document.getElementById('detailModalUraian').textContent = data.uraian;
-
-    const kendalaWrapper = document.getElementById('detailKendalaWrapper');
-    if (data.kendala) {
-        document.getElementById('detailModalKendala').textContent = data.kendala;
-        kendalaWrapper.classList.remove('hidden');
-    } else {
-        kendalaWrapper.classList.add('hidden');
+// Tambahkan event listener untuk form submit
+document.addEventListener('DOMContentLoaded', function() {
+    const rejectForm = document.getElementById('rejectForm');
+    if (rejectForm) {
+        rejectForm.addEventListener('submit', function(e) {
+            console.log('Reject form submitted'); // Debug
+            console.log('Form action:', this.action);
+            console.log('Note value:', document.getElementById('rejectNote').value);
+        });
     }
+});
+    window.closeRejectModal = function() {
+        const modal = document.getElementById('rejectModal');
+        modal.classList.remove('flex');
+        modal.classList.add('hidden');
+    };
 
-    const keteranganWrapper = document.getElementById('detailKeteranganWrapper');
-    if (data.keterangan) {
-        document.getElementById('detailModalKeterangan').textContent = data.keterangan;
-        keteranganWrapper.classList.remove('hidden');
-    } else {
-        keteranganWrapper.classList.add('hidden');
-    }
-
-    document.getElementById('detailModal').classList.replace('hidden', 'flex');
-}
-function closeDetailModal() {
-    document.getElementById('detailModal').classList.replace('flex', 'hidden');
-}
-
-// ── Approve Modal ─────────────────────────────
-function openApproveModal(id, stage) {
-    const isLast  = parseInt(stage) === 5;
-    const isFirst = parseInt(stage) === 1;
-
-    document.getElementById('approveForm').action = `{{ url('approval') }}/${id}/approve`;
-
-    const optionLanjut  = document.getElementById('optionLanjut');
-    const labelLanjut   = document.getElementById('labelLanjut');
-    const tdWrapper     = document.getElementById('optionTDWrapper');
-    const submitBtn     = document.getElementById('approveSubmitBtn');
-    const modalTitle    = document.getElementById('approveModalTitle');
-    const modalDesc     = document.getElementById('approveModalDesc');
-
-    // Reset
-    optionLanjut.checked = true;
-    document.getElementById('optionTD').checked = false;
-    document.getElementById('tdNoteWrapper').classList.add('hidden');
-    document.getElementById('tdNote').value = '';
-    document.getElementById('tdNoteError').classList.add('hidden');
-
-    tdWrapper.style.display = isFirst ? 'none' : '';
-
-    if (isLast) {
-        optionLanjut.value = 'selesai';
-        labelLanjut.textContent = 'Selesai — Tindak Lanjut Dinyatakan Tuntas';
-        submitBtn.textContent = 'Konfirmasi Selesai';
-        modalTitle.textContent = 'Finalisasi Laporan';
-        modalDesc.textContent = 'Laporan akan dinyatakan selesai dan tidak dapat diubah lagi.';
-    } else {
-        optionLanjut.value = 'lanjut';
-        labelLanjut.textContent = 'Lanjutkan ke Stage Berikutnya';
-        submitBtn.textContent = 'Konfirmasi Setuju';
-        modalTitle.textContent = 'Konfirmasi Persetujuan';
-        modalDesc.textContent = 'Pastikan laporan sudah sesuai standar.';
-    }
-
-    document.getElementById('approveModal').classList.replace('hidden', 'flex');
-}
-function closeApproveModal() {
-    document.getElementById('approveModal').classList.replace('flex', 'hidden');
-}
-function toggleTDNote() {
-    const isTD = document.getElementById('optionTD').checked;
-    const wrapper = document.getElementById('tdNoteWrapper');
-    const note = document.getElementById('tdNote');
-    const err = document.getElementById('tdNoteError');
-    if (isTD) { wrapper.classList.remove('hidden'); note.focus(); }
-    else { wrapper.classList.add('hidden'); note.value = ''; err.classList.add('hidden'); }
-}
-function submitApproveForm() {
-    
-    const isTD = document.getElementById('optionTD').checked;
-    const note = document.getElementById('tdNote');
-    const err  = document.getElementById('tdNoteError');
-    if (isTD && note.value.trim() === '') {
-        err.classList.remove('hidden'); note.focus();
-        note.classList.add('ring-2', 'ring-rose-400'); return;
-    }
-    err.classList.add('hidden');
-    note.classList.remove('ring-2', 'ring-rose-400');
-    document.getElementById('approveForm').submit();
-}
-
-// ── Reject Modal ──────────────────────────────
-function openRejectModal(id) {
-    document.getElementById('rejectNote').value = '';
-    document.getElementById('rejectForm').action = `/approval/${id}/reject`;
-    document.getElementById('rejectModal').classList.replace('hidden', 'flex');
-}
-function closeRejectModal() {
-    document.getElementById('rejectModal').classList.replace('flex', 'hidden');
-}
-
-// ── Close on backdrop click ───────────────────
-['detailModal','approveModal','rejectModal'].forEach(id => {
-    document.getElementById(id).addEventListener('click', function(e) {
-        if (e.target === this) this.classList.replace('flex', 'hidden');
+    // Close on backdrop click
+    const modals = ['detailModal', 'approveModal', 'rejectModal'];
+    modals.forEach(modalId => {
+        const el = document.getElementById(modalId);
+        if (el) {
+            el.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    if (modalId === 'detailModal') window.closeDetailModal();
+                    else if (modalId === 'approveModal') window.closeApproveModal();
+                    else if (modalId === 'rejectModal') window.closeRejectModal();
+                }
+            });
+        }
     });
 });
 </script>

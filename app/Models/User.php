@@ -42,10 +42,7 @@ class User extends Authenticatable
     {
         return $this->hasMany(User::class, 'pic_unit_kerja_id');
     }
-    public function arahanPic()
-    {
-        return $this->belongsToMany(Arahan::class, 'arahan_pic', 'user_id', 'arahan_id');
-    }
+   
     public function keputusan()
     {
         return $this->hasMany(Keputusan::class, 'created_by');

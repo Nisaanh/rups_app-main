@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Auth;
 
 class UnitKerjaController extends Controller
 {
-   
+
     /**
      * Display a listing of unit kerja with hierarchical structure.
      */
@@ -21,7 +21,7 @@ class UnitKerjaController extends Controller
     {
         $search = $request->get('search');
         $level = $request->get('level');
-        
+
         $unitKerja = UnitKerja::with('parent', 'children', 'users')
             ->when($search, function ($query, $search) {
                 return $query->where('name', 'like', "%{$search}%");
@@ -32,11 +32,12 @@ class UnitKerjaController extends Controller
             ->orderBy('level')
             ->orderBy('name')
             ->paginate(15);
-        
+
         // Get hierarchical tree for sidebar/select
         $tree = $this->buildHierarchyTree();
-        
-        // Statistics
+
+        $bidang = \App\Models\Bidang::orderBy('name', 'asc')->get();
+
         $stats = [
             'total' => UnitKerja::count(),
             'by_level' => UnitKerja::select('level', DB::raw('count(*) as total'))
@@ -47,31 +48,26 @@ class UnitKerjaController extends Controller
             'total_arahan' => \App\Models\Arahan::count(),
             'total_tindak_lanjut' => \App\Models\TindakLanjut::count(),
         ];
-        
+
         $levels = UnitKerja::distinct()->pluck('level');
-        
-        return view('unit-kerja.index', compact('unitKerja', 'tree', 'stats', 'levels', 'search', 'level'));
+
+        return view('unit-kerja.index', compact('unitKerja', 'tree', 'bidang', 'stats', 'levels', 'search', 'level'));
     }
 
-    /**
-     * Show the form for creating a new unit kerja.
-     */
-   /**
- * Show the form for creating a new unit kerja.
- */
-public function create()
-{
-    // 1. Ambil semua unit kerja yang sudah ada untuk jadi pilihan Atasan (Parent)
-    // Kita namakan variabelnya $parents agar sesuai dengan looping di Blade kamu
-    $parents = UnitKerja::orderBy('name')->get();
     
-    // 2. Data pendukung lainnya
-    $tree = $this->buildHierarchyTree();
-    $levels = ['Direktorat', 'Kompartemen', 'Departemen', 'Seksi', 'Sub Seksi'];
-    
-    // 3. Kirim ke view (Pastikan ada 'parents' di dalam compact)
-    return view('unit-kerja.create', compact('parents', 'tree', 'levels'));
-}
+    public function create()
+    {
+        // 1. Ambil semua unit kerja yang sudah ada untuk jadi pilihan Atasan (Parent)
+        // Kita namakan variabelnya $parents agar sesuai dengan looping di Blade kamu
+        $parents = UnitKerja::orderBy('name')->get();
+
+        // 2. Data pendukung lainnya
+        $tree = $this->buildHierarchyTree();
+        $levels = ['Direktorat', 'Kompartemen', 'Departemen', 'Seksi', 'Sub Seksi'];
+
+        // 3. Kirim ke view (Pastikan ada 'parents' di dalam compact)
+        return view('unit-kerja.create', compact('parents', 'tree', 'levels'));
+    }
 
     /**
      * Store a newly created unit kerja in storage.
@@ -104,7 +100,7 @@ public function create()
                 $parent = UnitKerja::find($request->report_to);
                 $currentLevelOrder = $this->getLevelOrder($request->level);
                 $parentLevelOrder = $this->getLevelOrder($parent->level);
-                
+
                 if ($currentLevelOrder <= $parentLevelOrder) {
                     DB::rollBack();
                     return redirect()->back()
@@ -126,7 +122,6 @@ public function create()
 
             return redirect()->route('unit-kerja.index')
                 ->with('success', "Unit kerja '{$unitKerja->name}' berhasil ditambahkan.");
-
         } catch (\Exception $e) {
             DB::rollBack();
             return redirect()->back()
@@ -141,10 +136,10 @@ public function create()
     public function show(UnitKerja $unitKerja)
     {
         $unitKerja->load(['parent', 'children', 'users', 'arahan.keputusan', 'tindakLanjut']);
-        
+
         // Get children recursively
         $descendants = $this->getDescendants($unitKerja->id);
-        
+
         // Get statistics
         $stats = [
             'total_users' => $unitKerja->users()->count(),
@@ -155,8 +150,8 @@ public function create()
             'pending_approvals' => $unitKerja->tindakLanjut()->where('status', 'pending')->count(),
             'completed_actions' => $unitKerja->tindakLanjut()->where('status', 'approved')->count(),
         ];
-        
-       
+
+
         return view('unit-kerja.show', compact('unitKerja', 'descendants', 'stats'));
     }
 
@@ -168,12 +163,12 @@ public function create()
         $allUnitKerja = UnitKerja::where('id', '!=', $unitKerja->id)->get();
         $tree = $this->buildHierarchyTree($unitKerja->id);
         $levels = ['Direktorat', 'Kompartemen', 'Departemen', 'Seksi', 'Sub Seksi'];
-        
+
         // Check if unit has children
         $hasChildren = $unitKerja->children()->exists();
-         $parents = $allUnitKerja;
-        
-        return view('unit-kerja.edit', compact('unitKerja', 'allUnitKerja', 'tree', 'levels', 'hasChildren','parents'));
+        $parents = $allUnitKerja;
+
+        return view('unit-kerja.edit', compact('unitKerja', 'allUnitKerja', 'tree', 'levels', 'hasChildren', 'parents'));
     }
 
     /**
@@ -206,7 +201,7 @@ public function create()
             // Validate hierarchy constraints
             if ($request->report_to) {
                 $parent = UnitKerja::find($request->report_to);
-                
+
                 // Prevent circular reference
                 if ($this->isCircularReference($unitKerja->id, $request->report_to)) {
                     DB::rollBack();
@@ -214,18 +209,18 @@ public function create()
                         ->with('error', 'Tidak dapat mengubah struktur karena akan menyebabkan referensi melingkar.')
                         ->withInput();
                 }
-                
+
                 // Validate level hierarchy
                 $currentLevelOrder = $this->getLevelOrder($request->level);
                 $parentLevelOrder = $this->getLevelOrder($parent->level);
-                
+
                 if ($currentLevelOrder <= $parentLevelOrder) {
                     DB::rollBack();
                     return redirect()->back()
                         ->with('error', 'Unit kerja tidak dapat melapor ke unit dengan level yang sama atau lebih rendah.')
                         ->withInput();
                 }
-                
+
                 // Cannot change parent if has children at same level
                 if ($unitKerja->children()->exists() && $unitKerja->report_to != $request->report_to) {
                     $affectedChildren = $unitKerja->children()->where('level', $unitKerja->level)->count();
@@ -264,7 +259,6 @@ public function create()
 
             return redirect()->route('unit-kerja.index')
                 ->with('success', "Unit kerja '{$unitKerja->name}' berhasil diupdate.");
-
         } catch (\Exception $e) {
             DB::rollBack();
             return redirect()->back()
@@ -307,7 +301,7 @@ public function create()
 
             $unitName = $unitKerja->name;
             $unitLevel = $unitKerja->level;
-            
+
             $unitKerja->delete();
 
             // Clear cache
@@ -318,7 +312,6 @@ public function create()
 
             return redirect()->route('unit-kerja.index')
                 ->with('success', "Unit kerja '{$unitName}' berhasil dihapus.");
-
         } catch (\Exception $e) {
             DB::rollBack();
             return redirect()->back()
@@ -335,7 +328,7 @@ public function create()
             ->with('roles')
             ->where('status', 'active')
             ->get()
-            ->map(function($user) {
+            ->map(function ($user) {
                 return [
                     'id' => $user->id,
                     'badge' => $user->badge,
@@ -345,7 +338,7 @@ public function create()
                     'status' => $user->status
                 ];
             });
-        
+
         return response()->json([
             'success' => true,
             'unit_kerja' => $unitKerja->name,
@@ -359,7 +352,7 @@ public function create()
     public function getTree()
     {
         $tree = $this->buildHierarchyTree();
-        
+
         return response()->json([
             'success' => true,
             'tree' => $tree
@@ -372,19 +365,19 @@ public function create()
     public function export(Request $request)
     {
         $format = $request->get('format', 'csv');
-        
+
         $unitKerja = UnitKerja::with('parent', 'users')
             ->orderBy('level')
             ->orderBy('name')
             ->get();
-        
+
         if ($format === 'csv') {
             $filename = 'unit_kerja_export_' . date('Y-m-d_His') . '.csv';
             $handle = fopen('php://temp', 'w+');
-            
+
             // CSV Headers
             fputcsv($handle, ['ID', 'Nama Unit Kerja', 'Level', 'Atasan', 'Jumlah User', 'Jumlah Arahan', 'Jumlah Tindak Lanjut', 'Dibuat', 'Diupdate']);
-            
+
             foreach ($unitKerja as $unit) {
                 fputcsv($handle, [
                     $unit->id,
@@ -398,18 +391,18 @@ public function create()
                     $unit->updated_at
                 ]);
             }
-            
+
             rewind($handle);
             $csv = stream_get_contents($handle);
             fclose($handle);
-            
+
             return response($csv, 200)
                 ->header('Content-Type', 'text/csv')
                 ->header('Content-Disposition', "attachment; filename={$filename}");
         }
-        
-       
-        
+
+
+
         return redirect()->back()->with('error', 'Format export tidak didukung.');
     }
 
@@ -430,21 +423,21 @@ public function create()
         try {
             $file = $request->file('file');
             $handle = fopen($file->getPathname(), 'r');
-            
+
             $header = fgetcsv($handle);
             $imported = 0;
             $errors = [];
-            
+
             while (($row = fgetcsv($handle)) !== FALSE) {
                 $data = array_combine($header, $row);
-                
+
                 // Validate and create unit kerja
                 $unitData = [
                     'name' => $data['name'] ?? null,
                     'level' => $data['level'] ?? null,
                     'report_to' => null
                 ];
-                
+
                 // Find parent by name if exists
                 if (isset($data['parent_name']) && $data['parent_name']) {
                     $parent = UnitKerja::where('name', $data['parent_name'])->first();
@@ -455,28 +448,27 @@ public function create()
                         continue;
                     }
                 }
-                
+
                 $unit = UnitKerja::create($unitData);
                 $imported++;
             }
-            
+
             fclose($handle);
-            
+
             // Clear cache
             Cache::forget('unit_kerja_hierarchy');
             Cache::forget('unit_kerja_tree');
-            
-           
-            
+
+
+
             $message = "Berhasil mengimport {$imported} unit kerja.";
             if (!empty($errors)) {
                 $message .= " Terdapat " . count($errors) . " error.";
             }
-            
+
             return redirect()->route('unit-kerja.index')
                 ->with('success', $message)
                 ->with('import_errors', $errors);
-                
         } catch (\Exception $e) {
             return redirect()->back()
                 ->with('error', 'Gagal import file: ' . $e->getMessage());
@@ -500,21 +492,20 @@ public function create()
 
         try {
             DB::beginTransaction();
-            
+
             foreach ($request->items as $item) {
                 $unit = UnitKerja::find($item['id']);
                 $unit->report_to = $item['parent_id'] ?? null;
                 $unit->save();
             }
-            
+
             // Clear cache
             Cache::forget('unit_kerja_hierarchy');
             Cache::forget('unit_kerja_tree');
-            
+
             DB::commit();
-            
+
             return response()->json(['success' => true, 'message' => 'Hierarki berhasil diupdate']);
-            
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json(['error' => $e->getMessage()], 500);
@@ -542,7 +533,7 @@ public function create()
             'most_arahan' => UnitKerja::withCount('arahan')->orderBy('arahan_count', 'desc')->take(5)->get(),
             'most_tindak_lanjut' => UnitKerja::withCount('tindakLanjut')->orderBy('tindak_lanjut_count', 'desc')->take(5)->get(),
         ];
-        
+
         return view('unit-kerja.statistics', compact('stats'));
     }
 
@@ -552,12 +543,12 @@ public function create()
     public function search(Request $request)
     {
         $query = $request->query('q', '');
-        
+
         $results = UnitKerja::where('name', 'like', "%{$query}%")
             ->orWhere('level', 'like', "%{$query}%")
             ->limit(10)
             ->get()
-            ->map(function($unit) {
+            ->map(function ($unit) {
                 return [
                     'id' => $unit->id,
                     'name' => $unit->name,
@@ -566,7 +557,7 @@ public function create()
                     'users_count' => $unit->users()->count()
                 ];
             });
-        
+
         return response()->json($results);
     }
 
@@ -576,19 +567,19 @@ public function create()
     private function buildHierarchyTree($excludeId = null)
     {
         $cacheKey = 'unit_kerja_tree_' . ($excludeId ?? 'all');
-        
-        return Cache::remember($cacheKey, 3600, function() use ($excludeId) {
+
+        return Cache::remember($cacheKey, 3600, function () use ($excludeId) {
             $query = UnitKerja::with('children');
             if ($excludeId) {
                 $query->where('id', '!=', $excludeId);
             }
             $units = $query->whereNull('report_to')->orderBy('name')->get();
-            
+
             $tree = [];
             foreach ($units as $unit) {
                 $tree[] = $this->buildNode($unit, $excludeId);
             }
-            
+
             return $tree;
         });
     }
@@ -604,14 +595,14 @@ public function create()
             'level' => $unit->level,
             'children' => []
         ];
-        
+
         foreach ($unit->children as $child) {
             if ($excludeId && $child->id == $excludeId) {
                 continue;
             }
             $node['children'][] = $this->buildNode($child, $excludeId);
         }
-        
+
         return $node;
     }
 
@@ -622,16 +613,16 @@ public function create()
     {
         $descendants = [];
         $unit = UnitKerja::find($unitId);
-        
+
         if ($includeSelf) {
             $descendants[] = $unit;
         }
-        
+
         foreach ($unit->children as $child) {
             $descendants[] = $child;
             $descendants = array_merge($descendants, $this->getDescendants($child->id));
         }
-        
+
         return $descendants;
     }
 
@@ -647,7 +638,7 @@ public function create()
             'Seksi' => 4,
             'Sub Seksi' => 5
         ];
-        
+
         return $order[$level] ?? 99;
     }
 
@@ -657,7 +648,7 @@ public function create()
     private function isCircularReference($unitId, $newParentId)
     {
         $current = $newParentId;
-        
+
         while ($current) {
             if ($current == $unitId) {
                 return true;
@@ -665,7 +656,7 @@ public function create()
             $parent = UnitKerja::find($current);
             $current = $parent ? $parent->report_to : null;
         }
-        
+
         return false;
     }
 
@@ -676,7 +667,7 @@ public function create()
     {
         $maxDepth = 0;
         $units = UnitKerja::all();
-        
+
         foreach ($units as $unit) {
             $depth = 0;
             $current = $unit;
@@ -687,7 +678,7 @@ public function create()
             }
             $maxDepth = max($maxDepth, $depth);
         }
-        
+
         return $maxDepth;
     }
 }
