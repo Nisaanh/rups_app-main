@@ -20,19 +20,19 @@ class DashboardController extends Controller
     private function getAccessibleUnitIds($user): ?array
     {
         $unitIds = collect();
-        
+
         // Unit sendiri
         if ($user->unit_kerja_id) {
             $unitIds->push($user->unit_kerja_id);
         }
-        
+
         // Unit bawahan (subordinates)
         $subordinateUnits = User::where('pic_unit_kerja_id', $user->id)
             ->whereNotNull('unit_kerja_id')
             ->pluck('unit_kerja_id');
-        
+
         $unitIds = $unitIds->concat($subordinateUnits)->unique()->values()->toArray();
-        
+
         return !empty($unitIds) ? $unitIds : null;
     }
 
@@ -48,7 +48,7 @@ class DashboardController extends Controller
         $isPengendaliTeknis = $user->can('approve_stage_3');
         $isPengendaliMutu = $user->can('approve_stage_4');
         $isPenanggungJawab = $user->can('approve_stage_5');
-        
+
         // Role yang melakukan approval (bukan Auditi)
         $isApprover = $isAtasanAuditi || $isTimMonitoring || $isPengendaliTeknis || $isPengendaliMutu || $isPenanggungJawab;
 
@@ -61,21 +61,21 @@ class DashboardController extends Controller
         // ============================================================
         if ($isAuditi) {
             $unitId = $user->unit_kerja_id;
-            
+
             // Tindak Lanjut: filter berdasarkan unit_kerja_id
             $tindakLanjutQuery->where('unit_kerja_id', $unitId);
-            
+
             // Arahan: filter berdasarkan PIC (arahan_pic)
-            $arahanQuery->whereHas('pics', function($q) use ($user) {
+            $arahanQuery->whereHas('pics', function ($q) use ($user) {
                 $q->where('users.id', $user->id);
             });
-            
+
             // Keputusan: filter berdasarkan arahan yang menjadi PIC
-            $keputusanQuery->whereHas('arahan.pics', function($q) use ($user) {
+            $keputusanQuery->whereHas('arahan.pics', function ($q) use ($user) {
                 $q->where('users.id', $user->id);
             });
         }
-        
+
         // ============================================================
         // FILTER UNTUK APPROVER (Atasan Auditi, Tim Monitoring, dll)
         // ============================================================
@@ -88,29 +88,29 @@ class DashboardController extends Controller
                     break;
                 }
             }
-            
+
             // Jika Stage 1 (Atasan Auditi): batasi unit sendiri + bawahan
             if ($currentStage === 1) {
                 $accessibleUnitIds = $this->getAccessibleUnitIds($user);
-                
+
                 if ($accessibleUnitIds !== null) {
                     // Tindak Lanjut: hanya unit yang bisa diakses
                     $tindakLanjutQuery->whereIn('unit_kerja_id', $accessibleUnitIds);
-                    
+
                     // Arahan: filter berdasarkan PIC yang unitnya bisa diakses
-                    $arahanQuery->whereHas('pics.unitKerja', function($q) use ($accessibleUnitIds) {
+                    $arahanQuery->whereHas('pics.unitKerja', function ($q) use ($accessibleUnitIds) {
                         $q->whereIn('unit_kerja.id', $accessibleUnitIds);
                     });
-                    
+
                     // Keputusan: filter sama seperti arahan
-                    $keputusanQuery->whereHas('arahan.pics.unitKerja', function($q) use ($accessibleUnitIds) {
+                    $keputusanQuery->whereHas('arahan.pics.unitKerja', function ($q) use ($accessibleUnitIds) {
                         $q->whereIn('unit_kerja.id', $accessibleUnitIds);
                     });
                 }
             }
             // Stage 2-5: bisa lihat semua unit (tidak perlu filter tambahan)
         }
-        
+
         // ============================================================
         // ADMIN: bisa lihat semua (tidak perlu filter)
         // ============================================================
@@ -147,15 +147,13 @@ class DashboardController extends Controller
             $unitKerjaStats = UnitKerja::withCount('tindakLanjut')->get()
                 ->map(fn($u) => ['id' => $u->id, 'name' => $u->name, 'total' => $u->tindak_lanjut_count]);
             $unitKerjaList = UnitKerja::orderBy('name')->get();
-        } 
-        elseif ($isAuditi) {
+        } elseif ($isAuditi) {
             // Auditi: hanya melihat bar unitnya sendiri
             $unitKerjaStats = UnitKerja::where('id', $user->unit_kerja_id)
                 ->withCount('tindakLanjut')->get()
                 ->map(fn($u) => ['id' => $u->id, 'name' => $u->name, 'total' => $u->tindak_lanjut_count]);
             $unitKerjaList = collect([]);
-        }
-        elseif ($isApprover) {
+        } elseif ($isApprover) {
             // Approver: lihat unit yang bisa diakses
             $currentStage = null;
             for ($stage = 1; $stage <= 5; $stage++) {
@@ -164,7 +162,7 @@ class DashboardController extends Controller
                     break;
                 }
             }
-            
+
             if ($currentStage === 1) {
                 $accessibleUnitIds = $this->getAccessibleUnitIds($user);
                 if ($accessibleUnitIds !== null) {
@@ -182,8 +180,7 @@ class DashboardController extends Controller
                     ->map(fn($u) => ['id' => $u->id, 'name' => $u->name, 'total' => $u->tindak_lanjut_count]);
                 $unitKerjaList = UnitKerja::orderBy('name')->get();
             }
-        }
-        else {
+        } else {
             $unitKerjaStats = collect([]);
             $unitKerjaList = collect([]);
         }
@@ -225,7 +222,7 @@ class DashboardController extends Controller
         if ($isAtasanAuditi) {
             $accessibleUnitIds = $this->getAccessibleUnitIds($user);
             if ($accessibleUnitIds !== null) {
-                $pendingApprovalsQuery->whereHas('tindakLanjut', function($q) use ($accessibleUnitIds) {
+                $pendingApprovalsQuery->whereHas('tindakLanjut', function ($q) use ($accessibleUnitIds) {
                     $q->whereIn('unit_kerja_id', $accessibleUnitIds);
                 });
             } else {
