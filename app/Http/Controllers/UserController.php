@@ -80,21 +80,13 @@ class UserController extends Controller
     /**
      * Show the form for creating a new user.
      */
-    public function create()
-    {
-        $unitKerja = UnitKerja::orderBy('level')->orderBy('name')->get();
-        $roles = Role::orderBy('name')->get();
+   public function create()
+{
+    $unitKerja = UnitKerja::orderBy('level')->orderBy('name')->get();
+    $roles = Role::orderBy('name')->get();
 
-        // Kita ambil user yang punya role otoritas (Admin, Monitoring, Atasan Auditi) 
-        // dan kita Eager Load 'unitKerja' supaya bisa di-grouping di Blade.
-        $picUsers = User::role(['Admin', 'Tim Monitoring', 'Atasan Auditi'])
-            ->where('status', 'active')
-            ->with('unitKerja')
-            ->orderBy('name')
-            ->get();
-
-        return view('users.create', compact('unitKerja', 'roles', 'picUsers'));
-    }
+    return view('users.create', compact('unitKerja', 'roles'));
+}
 
     /**
      * Store a newly created user in storage.

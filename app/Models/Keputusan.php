@@ -26,43 +26,37 @@ class Keputusan extends Model
      * Update status keputusan berdasarkan status agregat semua arahan
      */
     public function updateStatusBasedOnArahan()
-    {
-        $arahanList = $this->arahan;
-        
-        if ($arahanList->isEmpty()) {
-            $this->update(['status' => 'BD']);
-            return;
-        }
-        
-        $statuses = [];
-        foreach ($arahanList as $arahan) {
-            // Refresh relasi arahan untuk mendapatkan data terbaru
-            $arahan->load('tindakLanjut');
-            $statuses[] = $arahan->getAggregateStatus();
-        }
-        
-        // Cek apakah semua arahan Selesai (S)
-        $allSelesai = collect($statuses)->every(fn($s) => $s === 'S');
-        if ($allSelesai) {
-            $this->update(['status' => 'S']);
-            return;
-        }
-        
-        // Cek apakah semua arahan TD
-        $allTd = collect($statuses)->every(fn($s) => $s === 'td');
-        if ($allTd) {
-            $this->update(['status' => 'td']);
-            return;
-        }
-        
-        // Cek apakah ada arahan yang masih BS atau belum selesai
-        $hasBs = collect($statuses)->contains(fn($s) => in_array($s, ['BS', 'BD', 'pending', 'in_approval']));
-        if ($hasBs) {
-            $this->update(['status' => 'BS']);
-            return;
-        }
-        
-        // Default
-        $this->update(['status' => 'BS']);
+{
+    $allArahan = $this->arahan()->with('tindakLanjut')->get();
+
+    if ($allArahan->isEmpty()) {
+        return;
     }
+
+    $allSelesai = $allArahan->every(function ($arahan) {
+        $tindakLanjut = $arahan->tindakLanjut;
+
+        // Arahan belum ada TL sama sekali → belum selesai
+        if ($tindakLanjut->isEmpty()) {
+            return false;
+        }
+
+        // Ambil TL terbaru per unit kerja
+        $latestPerUnit = $tindakLanjut
+            ->groupBy('unit_kerja_id')
+            ->map(fn($list) => $list->sortByDesc('created_at')->first());
+
+        // Semua unit harus approved atau td
+        return $latestPerUnit->every(fn($tl) => in_array($tl->status, ['approved', 'td']));
+    });
+
+    if ($allSelesai) {
+        $this->update(['status' => 'S']);
+    } else {
+        // Kalau ada yang balik rejected/pending, kembalikan ke BS (Aktif)
+        if ($this->status === 'S') {
+            $this->update(['status' => 'BS']);
+        }
+    }
+}
 }

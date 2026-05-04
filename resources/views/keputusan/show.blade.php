@@ -30,7 +30,7 @@
                         <div>
                             <div class="flex items-center gap-2 mb-4">
                                 <span class="px-3 py-1 bg-white/10 border border-white/20 rounded-full text-[10px] font-black uppercase tracking-wider text-white/70">
-                                    {{ $keputusan->status === 'BD' ? 'Draft' : ($keputusan->status === 'S' ? 'Selesai' : 'Aktif') }}
+                                    {{ $keputusan->status === 'BD' ? 'Draft' : ($keputusan->status === 'BS' ? 'Aktif' : ($keputusan->status === 'S' ? 'Selesai' : $keputusan->status)) }}
                                 </span>
                             </div>
                             <h1 class="text-2xl md:text-3xl font-black text-white tracking-tight">

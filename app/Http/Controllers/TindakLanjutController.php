@@ -51,8 +51,10 @@ class TindakLanjutController extends Controller
 
         $stats = [
             'total'       => (clone $query)->count(),
-            'pending'     => (clone $tlQuery)->where('status', 'pending')->count(),
-            'in_approval' => (clone $tlQuery)->where('status', 'in_approval')->count(),
+            'pending'     => (clone $query)->whereDoesntHave('tindakLanjut')->count(),
+           'in_approval' => (clone $query)->whereHas('tindakLanjut', function($q) {
+                        $q->whereIn('status', ['pending', 'in_approval']);
+                    })->count(),
             'approved'    => (clone $tlQuery)->where('status', 'approved')->count(),
             'revisi'      => $revisiCount,
             'td'          => $tdCount, // Tambahkan statistik TD
@@ -150,19 +152,7 @@ class TindakLanjutController extends Controller
                 'status'           => 'pending'
             ]);
 
-        // Notifikasi ke Atasan Auditi (picUnit dari pembuat laporan)
-            /** @var User $currentUser */
-            $currentUser = Auth::user();
-            $atasanAuditi = $currentUser->picUnit;
-            if ($atasanAuditi) {
-                Notification::create([
-                    'user_id' => $atasanAuditi->id,
-                    'title'   => 'Approval Stage 1 - Atasan Auditi',
-                    'message' => 'Tindak lanjut baru dari unit ' . $currentUser->unitKerja->name . ' membutuhkan persetujuan Anda.',
-                    'type'    => 'approval',
-                    'data'    => ['tindak_lanjut_id' => $tindakLanjut->id, 'stage' => 1]
-                ]);
-            }
+       
 
             DB::commit();
 
@@ -304,18 +294,7 @@ class TindakLanjutController extends Controller
             ]);
 
         // NOTIFIKASI KE ATASAN AUDITI
-            /** @var User $currentUser */
-            $currentUser = Auth::user();
-            $atasanAuditi = $currentUser->picUnit;
-            if ($atasanAuditi) {
-                Notification::create([
-                    'user_id' => $atasanAuditi->id,
-                    'title'   => 'Approval Stage 1 - Atasan Auditi (Revisi)',
-                    'message' => 'Tindak lanjut hasil revisi dari unit ' . $currentUser->unitKerja->name . ' membutuhkan persetujuan Anda.',
-                    'type'    => 'approval',
-                    'data'    => ['tindak_lanjut_id' => $tindaklanjut->id, 'stage' => 1]
-                ]);
-            }
+           
 
             return redirect()->route('tindaklanjut.show_arahan', $tindaklanjut->arahan_id)
                 ->with('success', 'Tindak lanjut berhasil diperbarui dan dikembalikan ke antrian Approval Stage 1.');

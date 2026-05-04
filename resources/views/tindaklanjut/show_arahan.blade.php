@@ -97,7 +97,7 @@
                         'rejected' => 'Perlu Revisi',
                         'in_approval' => 'Dalam Approval',
                         'td' => 'Tidak Ditindaklanjuti',
-                        default => 'Pending'
+                        default => 'Menunggu Approval'
                         };
                         $badgeIcon = match($tlStatus) {
                         'approved' => '✓',
@@ -292,7 +292,7 @@
                 (data.status === 'rejected' ? '<span class="px-2 py-1 bg-orange-50 text-orange-700 rounded text-[10px] font-bold">↺ Perlu Revisi</span>' :
                     (data.status === 'in_approval' ? '<span class="px-2 py-1 bg-blue-50 text-blue-700 rounded text-[10px] font-bold">⏳ Dalam Approval</span>' :
                         (data.status === 'td' ? '<span class="px-2 py-1 bg-slate-100 text-slate-600 rounded text-[10px] font-bold">✗ TD - Tidak Ditindaklanjuti</span>' :
-                            '<span class="px-2 py-1 bg-amber-50 text-amber-700 rounded text-[10px] font-bold">⏰ Pending</span>')));
+                            '<span class="px-2 py-1 bg-amber-50 text-amber-700 rounded text-[10px] font-bold">⏰ Menunggu Approval</span>')));
 
             // Catatan TD atau Revisi
             let catatanHtml = '';

@@ -62,19 +62,19 @@ class ApprovalController extends Controller
 
         // Stage 1 (Atasan Auditi): unit sendiri + unit bawahan
         $unitIds = collect();
-        
+
         // Unit sendiri
         if ($user->unit_kerja_id) {
             $unitIds->push($user->unit_kerja_id);
         }
-        
+
         // Unit bawahan (subordinates)
         $subordinateUnits = User::where('pic_unit_kerja_id', $user->id)
             ->whereNotNull('unit_kerja_id')
             ->pluck('unit_kerja_id');
-        
+
         $unitIds = $unitIds->concat($subordinateUnits)->unique()->values()->toArray();
-        
+
         return !empty($unitIds) ? $unitIds : null;
     }
 
@@ -84,13 +84,13 @@ class ApprovalController extends Controller
     private function filterApprovalsByAccess($query)
     {
         $accessibleUnitIds = $this->getAccessibleUnitIds();
-        
+
         if ($accessibleUnitIds !== null) {
-            $query->whereHas('tindakLanjut', function($q) use ($accessibleUnitIds) {
+            $query->whereHas('tindakLanjut', function ($q) use ($accessibleUnitIds) {
                 $q->whereIn('unit_kerja_id', $accessibleUnitIds);
             });
         }
-        
+
         return $query;
     }
 
@@ -110,8 +110,7 @@ class ApprovalController extends Controller
                     'tindakLanjut.creator',
                     'tindakLanjut.approvals',
                 ]);
-            
-            // Terapkan filter akses
+
             $pendingApprovals = $this->filterApprovalsByAccess($pendingApprovals)
                 ->latest()
                 ->get();
@@ -119,18 +118,25 @@ class ApprovalController extends Controller
             $pendingApprovals = collect();
         }
 
-        // Riwayat approval - juga difilter
         $approvalHistory = Approval::where('approved_by', $user->id)
             ->where('stage', $currentStage)
             ->with(['tindakLanjut.unitKerja', 'tindakLanjut.arahan']);
-        
+
         $approvalHistory = $this->filterApprovalsByAccess($approvalHistory)
             ->latest()
             ->paginate(5);
 
         $pendingCount   = $pendingApprovals->count();
-        $approvedCount  = Approval::where('approved_by', $user->id)->where('status', 'approved')->count();
-        $rejectedCount  = Approval::where('approved_by', $user->id)->where('status', 'rejected')->count();
+        $approvedCount  = Approval::where('approved_by', $user->id)
+            ->where('stage', $currentStage)
+            ->where('status', 'approved')
+            ->count();
+
+        $rejectedCount = $currentStage ? Approval::where('approved_by', $user->id)
+            ->where('stage', $currentStage)
+            ->where('status', 'rejected')
+            ->where('note', 'not like', '%Ditetapkan sebagai TD%')  // ← exclude TD
+            ->count() : 0;
         $completedStage = $currentStage ? $currentStage - 1 : 0;
 
         return view('approval.index', compact(
@@ -167,10 +173,9 @@ class ApprovalController extends Controller
             $tindaklanjut = TindakLanjut::with(['arahan', 'unitKerja', 'arahan.keputusan'])
                 ->findOrFail($tindakLanjutId);
 
-            // === CEK AKSES UNTUK STAGE 1 (ATASAN AUDITI) ===
             if ($currentStageNumber === 1) {
                 $accessibleUnitIds = $this->getAccessibleUnitIds();
-                
+
                 if (!$accessibleUnitIds || !in_array($tindaklanjut->unit_kerja_id, $accessibleUnitIds)) {
                     return back()->with('error', 'Anda hanya dapat mengapprove tindak lanjut dari unit kerja Anda sendiri atau bawahan Anda.');
                 }
@@ -200,8 +205,6 @@ class ApprovalController extends Controller
 
                 if ($tindaklanjut->arahan) {
                     $tindaklanjut->arahan->update(['status' => 'td']);
-
-                    // Update status keputusan
                     $keputusan = $tindaklanjut->arahan->keputusan;
                     if ($keputusan) {
                         $keputusan->load('arahan.tindakLanjut');
@@ -229,7 +232,6 @@ class ApprovalController extends Controller
                 $tindaklanjut->update(['status' => 'approved']);
 
                 if ($tindaklanjut->arahan) {
-                    // Cek apakah semua unit sudah approved
                     $allUnitsApproved = $tindaklanjut->arahan->tindakLanjut
                         ->groupBy('unit_kerja_id')
                         ->every(fn($tlList) => $tlList->sortByDesc('created_at')->first()->status === 'approved');
@@ -238,7 +240,6 @@ class ApprovalController extends Controller
                         $tindaklanjut->arahan->update(['status' => 'S']);
                     }
 
-                    // Update status keputusan
                     $keputusan = $tindaklanjut->arahan->keputusan;
                     if ($keputusan) {
                         $keputusan->load('arahan.tindakLanjut');
@@ -287,13 +288,12 @@ class ApprovalController extends Controller
             // === CEK AKSES UNTUK STAGE 1 (ATASAN AUDITI) ===
             if ($currentStageNumber === 1) {
                 $accessibleUnitIds = $this->getAccessibleUnitIds();
-                
+
                 if (!$accessibleUnitIds || !in_array($tindaklanjut->unit_kerja_id, $accessibleUnitIds)) {
                     return back()->with('error', 'Anda hanya dapat merevisi tindak lanjut dari unit kerja Anda sendiri atau bawahan Anda.');
                 }
             }
 
-            // Cari approval yang pending untuk stage ini
             $approval = Approval::where('tindak_lanjut_id', $tindaklanjut->id)
                 ->where('stage', $currentStageNumber)
                 ->where('status', 'pending')
@@ -304,7 +304,6 @@ class ApprovalController extends Controller
                 return back()->with('error', 'Data approval tidak ditemukan atau sudah diproses.');
             }
 
-            // Update approval menjadi rejected
             $approval->update([
                 'status'      => 'rejected',
                 'note'        => $request->note,
@@ -312,20 +311,15 @@ class ApprovalController extends Controller
                 'approved_at' => now(),
             ]);
 
-            // Update status tindak lanjut
             $tindaklanjut->update(['status' => 'rejected']);
 
-            // Update status arahan jika ada
             if ($tindaklanjut->arahan) {
-                // Update status keputusan
                 if ($tindaklanjut->arahan->keputusan) {
                     $keputusan = $tindaklanjut->arahan->keputusan;
                     $keputusan->load('arahan.tindakLanjut');
                     $keputusan->updateStatusBasedOnArahan();
                 }
             }
-
-            // HAPUS approval stage berikutnya jika ada
             $tindaklanjut->approvals()->where('stage', '>', $currentStageNumber)->delete();
 
             DB::commit();
@@ -351,10 +345,9 @@ class ApprovalController extends Controller
 
         $currentStage = $this->getCurrentStage();
 
-        // === CEK AKSES UNTUK STAGE 1 ===
         if ($currentStage === 1) {
             $accessibleUnitIds = $this->getAccessibleUnitIds();
-            
+
             if (!$accessibleUnitIds || !in_array($tindakLanjut->unit_kerja_id, $accessibleUnitIds)) {
                 abort(403, 'Anda tidak memiliki akses untuk melihat laporan unit ini.');
             }

@@ -66,17 +66,25 @@
                                     </div>
                                 </td>
 
-                                <td class="px-10 py-6">
-                                    @if($item->status === 'BD')
-                                        <span class="inline-flex items-center px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-50 text-amber-600 border border-amber-100">
-                                            <span class="w-1.5 h-1.5 rounded-full bg-amber-500 mr-2 animate-pulse"></span> Draft
-                                        </span>
-                                    @else
-                                        <span class="inline-flex items-center px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-50 text-emerald-600 border border-emerald-100">
-                                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-2"></span> Dikirim
-                                        </span>
-                                    @endif
-                                </td>
+                               <td class="px-10 py-6">
+    @if($item->status === 'BD')
+        <span class="inline-flex items-center px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-50 text-amber-600 border border-amber-100">
+            <span class="w-1.5 h-1.5 rounded-full bg-amber-500 mr-2 animate-pulse"></span> Draft
+        </span>
+    @elseif($item->status === 'BS')
+        <span class="inline-flex items-center px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-blue-50 text-blue-600 border border-blue-100">
+            <span class="w-1.5 h-1.5 rounded-full bg-blue-500 mr-2 animate-pulse"></span> Aktif
+        </span>
+    @elseif($item->status === 'S')
+        <span class="inline-flex items-center px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-50 text-emerald-600 border border-emerald-100">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-2"></span> Selesai
+        </span>
+    @else
+        <span class="inline-flex items-center px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-slate-50 text-slate-500 border border-slate-100">
+            <span class="w-1.5 h-1.5 rounded-full bg-slate-400 mr-2"></span> {{ $item->status }}
+        </span>
+    @endif
+</td>
                                 
                                 <td class="px-10 py-6">
                                     <div class="flex flex-col">

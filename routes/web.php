@@ -86,6 +86,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/create', [UserController::class, 'create'])->name('create');
         Route::post('/', [UserController::class, 'store'])->name('store');
 
+        Route::get('/pic-by-unit/{unitId}', [UserController::class, 'getPicByUnit'])->name('pic-by-unit')->withoutMiddleware('permission:manage_users');
+
         // My Profile (Accessible by anyone auth)
         Route::get('/my-profile', [UserController::class, 'profile'])->name('profile')->withoutMiddleware('permission:manage_users');
         Route::put('/my-profile/update', [UserController::class, 'updateProfile'])->name('update-profile')->withoutMiddleware('permission:manage_users');

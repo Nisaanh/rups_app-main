@@ -109,7 +109,8 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
                                 <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">Unit Kerja</label>
-                                <select name="unit_kerja_id" class="w-full rounded-2xl border-slate-200 focus:border-blue-500 focus:ring-blue-500 font-bold text-slate-700">
+                                <select name="unit_kerja_id" id="unit_kerja_id"
+                                    class="w-full rounded-2xl border-slate-200 focus:border-blue-500 focus:ring-blue-500 font-bold text-slate-700">
                                     <option value="">-- Pilih Unit Kerja --</option>
                                     @foreach($unitKerja as $unit)
                                     <option value="{{ $unit->id }}" {{ old('unit_kerja_id') == $unit->id ? 'selected' : '' }}>
@@ -121,7 +122,8 @@
 
                             <div>
                                 <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">Role / Hak Akses <span class="text-rose-500">*</span></label>
-                                <select name="role" class="w-full rounded-2xl border-slate-200 focus:border-blue-500 focus:ring-blue-500 font-bold text-slate-700" required>
+                                <select name="role" id="role_select"
+                                    class="w-full rounded-2xl border-slate-200 focus:border-blue-500 focus:ring-blue-500 font-bold text-slate-700" required>
                                     <option value="">-- Pilih Role --</option>
                                     @foreach($roles as $role)
                                     <option value="{{ $role->name }}" {{ old('role') == $role->name ? 'selected' : '' }}>
@@ -131,20 +133,19 @@
                                 </select>
                             </div>
 
-                            <div class="md:col-span-2">
-                                <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">Atasan Langsung / PIC</label>
-                                <select name="pic_unit_kerja_id" class="w-full rounded-2xl border-slate-200 focus:border-blue-500 focus:ring-blue-500 font-bold text-slate-700">
-                                    <option value="">-- Pilih Atasan --</option>
-                                    @foreach($picUsers->groupBy(fn($item) => $item->unitKerja->name ?? 'Admin / Pusat') as $unitName => $users)
-                                    <optgroup label="UNIT: {{ strtoupper($unitName) }}">
-                                        @foreach($users as $pic)
-                                        <option value="{{ $pic->id }}" {{ old('pic_unit_kerja_id') == $pic->id ? 'selected' : '' }}>
-                                            {{ $pic->name }} ({{ $pic->badge }})
-                                        </option>
-                                        @endforeach
-                                    </optgroup>
-                                    @endforeach
-                                </select>
+                            {{-- Atasan: hanya muncul jika role Auditi --}}
+                            <div class="md:col-span-2 hidden" id="pic_wrapper">
+                                <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">
+                                    Atasan Langsung
+                                    <span id="pic-loading" class="hidden ml-2 text-blue-500 normal-case font-medium tracking-normal">Memuat...</span>
+                                </label>
+                                <div id="pic-hint-box" class="mt-1 p-3 bg-emerald-50 border border-emerald-200 rounded-2xl hidden">
+                                    <p id="pic-hint" class="text-emerald-700 text-xs font-semibold"></p>
+                                </div>
+                                <div id="pic-error-box" class="mt-1 p-3 bg-rose-50 border border-rose-200 rounded-2xl hidden">
+                                    <p id="pic-error" class="text-rose-600 text-xs font-semibold"></p>
+                                </div>
+                                <input type="hidden" name="pic_unit_kerja_id" id="pic_hidden">
                             </div>
                         </div>
                     </div>
@@ -180,4 +181,70 @@
             </form>
         </div>
     </div>
+
+    <script>
+        const unitSelect = document.getElementById('unit_kerja_id');
+        const roleSelect = document.getElementById('role_select');
+        const picWrapper = document.getElementById('pic_wrapper');
+        const picLoading = document.getElementById('pic-loading');
+        const picHintBox = document.getElementById('pic-hint-box');
+        const picHint = document.getElementById('pic-hint');
+        const picErrorBox = document.getElementById('pic-error-box');
+        const picError = document.getElementById('pic-error');
+        const picHidden = document.getElementById('pic_hidden');
+
+        function resetPicInfo() {
+            picHintBox.classList.add('hidden');
+            picErrorBox.classList.add('hidden');
+            picHidden.value = '';
+        }
+
+        function fetchAndSetPic() {
+            const unitId = unitSelect.value;
+            const isAuditi = roleSelect.value === 'Auditi';
+
+            // Sembunyikan section atasan kalau bukan Auditi
+            if (!isAuditi) {
+                picWrapper.classList.add('hidden');
+                resetPicInfo();
+                return;
+            }
+
+            picWrapper.classList.remove('hidden');
+            resetPicInfo();
+
+            if (!unitId) {
+                picErrorBox.classList.remove('hidden');
+                picError.textContent = 'Pilih Unit Kerja terlebih dahulu untuk menentukan atasan.';
+                return;
+            }
+
+            picLoading.classList.remove('hidden');
+
+            fetch(`/users/pic-by-unit/${unitId}`)
+                .then(res => res.json())
+                .then(users => {
+                    picLoading.classList.add('hidden');
+
+                    if (users.length === 0) {
+                        picErrorBox.classList.remove('hidden');
+                        picError.textContent = 'Tidak ditemukan atasan untuk unit kerja ini. Pastikan unit induk sudah memiliki Atasan Auditi.';
+                        return;
+                    }
+
+                    // Auto-set atasan pertama
+                    picHidden.value = users[0].id;
+                    picHintBox.classList.remove('hidden');
+                    picHint.textContent = '✓ Atasan otomatis: ' + users[0].name + ' (' + users[0].badge + ')';
+                })
+                .catch(() => {
+                    picLoading.classList.add('hidden');
+                    picErrorBox.classList.remove('hidden');
+                    picError.textContent = 'Gagal memuat data atasan. Silakan coba lagi.';
+                });
+        }
+
+        unitSelect.addEventListener('change', fetchAndSetPic);
+        roleSelect.addEventListener('change', fetchAndSetPic);
+    </script>
 </x-app-layout>
