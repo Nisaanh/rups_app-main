@@ -1,152 +1,187 @@
 <x-app-layout>
-    {{-- Header Bar: Action Buttons --}}
-    <div class="mb-6 flex items-center justify-between">
-        <div class="flex items-center space-x-3">
-            <a href="{{ route('users.index') }}" class="inline-flex items-center px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-600 hover:bg-slate-50 transition shadow-sm">
-                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+    <div class="py-2 bg-gradient-to-br from-slate-50 to-slate-100 min-h-screen">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+
+            {{-- Back Button --}}
+            <a href="{{ route('users.index') }}" 
+                class="inline-flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-200 text-slate-600 rounded-xl text-xs font-bold hover:bg-slate-50 transition shadow-sm">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                </svg>
                 Kembali
             </a>
-            <h2 class="text-2xl font-extrabold text-slate-800 tracking-tight">Edit Pengguna</h2>
-        </div>
-    </div>
 
-    <div class="max-w-5xl">
-        <div class="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 overflow-hidden">
-            {{-- Decorative Header --}}
-            <div class="p-8 bg-slate-900 text-white relative overflow-hidden">
-                <div class="relative z-10 flex justify-between items-center">
-                    <div>
-                        <h3 class="text-xl font-bold">Perbarui Data Akun</h3>
-                        <p class="text-slate-400 text-sm mt-1 tracking-wide">{{ $user->name }} ({{ $user->badge }})</p>
+            {{-- Form Card --}}
+            <div class="bg-white rounded-3xl shadow-lg border border-slate-100 overflow-hidden">
+                {{-- Header --}}
+                <div class="relative overflow-hidden bg-gradient-to-r from-slate-900 via-slate-800 to-indigo-900 p-8 text-white">
+                    <div class="relative z-10 flex justify-between items-center">
+                        <div>
+                            <h3 class="text-xl font-black uppercase tracking-tight">Perbarui Data Akun</h3>
+                            <p class="text-slate-300 text-sm mt-1">{{ $user->name }} ({{ $user->badge }})</p>
+                        </div>
+                        <span class="px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider
+                            {{ $user->status == 'active' ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-rose-500/20 text-rose-300 border border-rose-500/30' }}">
+                            {{ $user->status }}
+                        </span>
                     </div>
-                    <div class="px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest {{ $user->status == 'active' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-rose-500/20 text-rose-400 border border-rose-500/30' }}">
-                        {{ $user->status }}
-                    </div>
+                    <div class="absolute -right-10 -bottom-10 w-40 h-40 bg-sky-500/20 rounded-full blur-3xl"></div>
+                    <div class="absolute right-20 top-0 w-32 h-32 bg-indigo-500/10 rounded-full blur-2xl"></div>
                 </div>
-                <div class="absolute -right-10 -bottom-10 w-40 h-40 bg-blue-600/20 rounded-full blur-3xl"></div>
-            </div>
 
-            <form action="{{ route('users.update', $user) }}" method="POST">
-                @csrf
-                @method('PUT')
-                
-                <div class="p-8 space-y-8">
+                @if ($errors->any())
+                <div class="mx-6 mt-6 bg-rose-50 border border-rose-200 text-rose-700 px-5 py-4 rounded-2xl">
+                    <p class="text-[10px] font-black uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                        </svg>
+                        Gagal menyimpan
+                    </p>
+                    <ul class="text-xs space-y-1">
+                        @foreach ($errors->all() as $error)
+                        <li class="flex items-start gap-2">
+                            <span class="mt-1 w-1 h-1 rounded-full bg-rose-500 flex-shrink-0"></span>
+                            {{ $error }}
+                        </li>
+                        @endforeach
+                    </ul>
+                </div>
+                @endif
+
+                <form action="{{ route('users.update', $user) }}" method="POST">
+                    @csrf
+                    @method('PUT')
                     
-                    {{-- Section 1: Identitas --}}
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Badge / NIP</label>
-                            <input type="text" name="badge" value="{{ old('badge', $user->badge) }}" 
-                                   class="w-full rounded-2xl border-slate-200 bg-slate-50 text-slate-400 font-bold cursor-not-allowed"
-                                   readonly>
-                        </div>
+                    <div class="p-8 space-y-6">
                         
+                        {{-- Section 1: Identitas --}}
                         <div>
-                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Nama Lengkap <span class="text-rose-500">*</span></label>
-                            <input type="text" name="name" value="{{ old('name', $user->name) }}" 
-                                   class="w-full rounded-2xl border-slate-200 focus:border-blue-500 focus:ring-blue-500 font-bold text-slate-700 @error('name') border-rose-500 @enderror"
-                                   required>
-                            @error('name') <p class="text-rose-500 text-[10px] font-bold mt-1 uppercase">{{ $message }}</p> @enderror
-                        </div>
+                            <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                                <span class="w-1.5 h-1.5 bg-indigo-500 rounded-full"></span>
+                                Informasi Identitas
+                            </h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                <div>
+                                    <label class="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Badge / NIP</label>
+                                    <input type="text" name="badge" value="{{ old('badge', $user->badge) }}" 
+                                           class="w-full px-4 py-3 bg-slate-100 border border-slate-200 rounded-xl text-xs font-bold text-slate-500 cursor-not-allowed"
+                                           readonly>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Nama Lengkap <span class="text-rose-500">*</span></label>
+                                    <input type="text" name="name" value="{{ old('name', $user->name) }}" 
+                                           class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition @error('name') border-rose-300 @enderror"
+                                           required>
+                                    @error('name') <p class="text-rose-500 text-[9px] font-bold mt-1">{{ $message }}</p> @enderror
+                                </div>
 
-                        <div class="md:col-span-2">
-                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Alamat Email <span class="text-rose-500">*</span></label>
-                            <input type="email" name="email" value="{{ old('email', $user->email) }}" 
-                                   class="w-full rounded-2xl border-slate-200 focus:border-blue-500 focus:ring-blue-500 font-bold text-slate-700 @error('email') border-rose-500 @enderror"
-                                   required>
-                            @error('email') <p class="text-rose-500 text-[10px] font-bold mt-1 uppercase">{{ $message }}</p> @enderror
-                        </div>
-                    </div>
-
-                    {{-- Section 2: Password (Yellow Box) --}}
-                    <div class="p-6 bg-amber-50 rounded-[2rem] border border-amber-100">
-                        <h4 class="text-[10px] font-black text-amber-600 uppercase tracking-widest mb-4">Ganti Password? (Opsional)</h4>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div>
-                                <label class="block text-[10px] font-black text-amber-700 uppercase mb-2">Password Baru</label>
-                                <input type="password" name="password" 
-                                       class="w-full rounded-2xl border-amber-200 focus:border-amber-500 focus:ring-amber-500 placeholder-amber-300"
-                                       placeholder="Kosongkan jika tidak diubah">
-                            </div>
-                            <div>
-                                <label class="block text-[10px] font-black text-amber-700 uppercase mb-2">Konfirmasi Password</label>
-                                <input type="password" name="password_confirmation" 
-                                       class="w-full rounded-2xl border-amber-200 focus:border-amber-500 focus:ring-amber-500 placeholder-amber-300"
-                                       placeholder="Ulangi password">
+                                <div class="md:col-span-2">
+                                    <label class="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Alamat Email <span class="text-rose-500">*</span></label>
+                                    <input type="email" name="email" value="{{ old('email', $user->email) }}" 
+                                           class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition @error('email') border-rose-300 @enderror"
+                                           required>
+                                    @error('email') <p class="text-rose-500 text-[9px] font-bold mt-1">{{ $message }}</p> @enderror
+                                </div>
                             </div>
                         </div>
-                    </div>
 
-                    {{-- Section 3: Akses --}}
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Unit Kerja</label>
-                            <select name="unit_kerja_id" class="w-full rounded-2xl border-slate-200 focus:border-blue-500 focus:ring-blue-500 font-bold text-slate-700">
-                                <option value="">-- Pilih Unit Kerja --</option>
-                                @foreach($unitKerja as $unit)
-                                    <option value="{{ $unit->id }}" {{ old('unit_kerja_id', $user->unit_kerja_id) == $unit->id ? 'selected' : '' }}>
-                                        {{ $unit->name }} ({{ $unit->level }})
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-                        
-                        <div>
-                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Role / Hak Akses <span class="text-rose-500">*</span></label>
-                            <select name="role" class="w-full rounded-2xl border-slate-200 focus:border-blue-500 focus:ring-blue-500 font-bold text-slate-700" required>
-                                @foreach($roles as $role)
-                                    <option value="{{ $role->name }}" {{ old('role', $userRole->name ?? '') == $role->name ? 'selected' : '' }}>
-                                        {{ $role->name }}
-                                    </option>
-                                @endforeach
-                            </select>
+                        {{-- Section 2: Password (Opsional) --}}
+                        <div class="bg-amber-50 rounded-2xl p-5 border border-amber-100">
+                            <h4 class="text-[10px] font-black text-amber-600 uppercase tracking-widest mb-4">Ganti Password? (Opsional)</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                <div>
+                                    <label class="block text-[9px] font-black text-amber-700 uppercase tracking-widest mb-1.5">Password Baru</label>
+                                    <input type="password" name="password" 
+                                           class="w-full px-4 py-3 bg-white border border-amber-200 rounded-xl text-xs font-bold text-slate-700 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition"
+                                           placeholder="Kosongkan jika tidak diubah">
+                                </div>
+                                <div>
+                                    <label class="block text-[9px] font-black text-amber-700 uppercase tracking-widest mb-1.5">Konfirmasi Password</label>
+                                    <input type="password" name="password_confirmation" 
+                                           class="w-full px-4 py-3 bg-white border border-amber-200 rounded-xl text-xs font-bold text-slate-700 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 transition"
+                                           placeholder="Ulangi password">
+                                </div>
+                            </div>
                         </div>
 
-                        <div class="md:col-span-2">
-                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Atasan Langsung / PIC</label>
-                            <select name="pic_unit_kerja_id" class="w-full rounded-2xl border-slate-200 focus:border-blue-500 focus:ring-blue-500 font-bold text-slate-700">
-                                <option value="">-- Pilih Atasan --</option>
-                                @foreach($picUsers->groupBy(fn($item) => $item->unitKerja->name ?? 'Admin / Pusat') as $unitName => $users)
-                                    <optgroup label="UNIT: {{ strtoupper($unitName) }}">
-                                        @foreach($users as $pic)
-                                            <option value="{{ $pic->id }}" {{ old('pic_unit_kerja_id', $user->pic_unit_kerja_id) == $pic->id ? 'selected' : '' }}>
-                                                {{ $pic->name }} ({{ $pic->badge }})
+                        {{-- Section 3: Akses --}}
+                        <div>
+                            <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                                <span class="w-1.5 h-1.5 bg-purple-500 rounded-full"></span>
+                                Penempatan & Akses
+                            </h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                <div>
+                                    <label class="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Unit Kerja</label>
+                                    <select name="unit_kerja_id" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition">
+                                        <option value="">-- Pilih Unit Kerja --</option>
+                                        @foreach($unitKerja as $unit)
+                                            <option value="{{ $unit->id }}" {{ old('unit_kerja_id', $user->unit_kerja_id) == $unit->id ? 'selected' : '' }}>
+                                                {{ $unit->name }} ({{ $unit->level }})
                                             </option>
                                         @endforeach
-                                    </optgroup>
-                                @endforeach
-                            </select>
-                        </div>
-                    </div>
+                                    </select>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Role / Hak Akses <span class="text-rose-500">*</span></label>
+                                    <select name="role" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition" required>
+                                        @foreach($roles as $role)
+                                            <option value="{{ $role->name }}" {{ old('role', $userRole->name ?? '') == $role->name ? 'selected' : '' }}>
+                                                {{ $role->name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
 
-                    {{-- Section 4: Status --}}
-                    <div class="p-6 bg-slate-50 rounded-[2rem] border border-slate-100">
-                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Status Akun</label>
-                        <div class="flex gap-6">
-                            <label class="flex items-center cursor-pointer group">
-                                <input type="radio" name="status" value="active" {{ old('status', $user->status) == 'active' ? 'checked' : '' }} 
-                                       class="w-4 h-4 text-blue-600 border-slate-300 focus:ring-blue-500">
-                                <span class="ml-2 text-sm font-bold text-slate-600 group-hover:text-slate-900">Aktif</span>
-                            </label>
-                            <label class="flex items-center cursor-pointer group">
-                                <input type="radio" name="status" value="inactive" {{ old('status', $user->status) == 'inactive' ? 'checked' : '' }} 
-                                       class="w-4 h-4 text-rose-600 border-slate-300 focus:ring-rose-500">
-                                <span class="ml-2 text-sm font-bold text-slate-600 group-hover:text-slate-900">Nonaktif</span>
-                            </label>
+                                <div class="md:col-span-2">
+                                    <label class="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Atasan Langsung / PIC</label>
+                                    <select name="pic_unit_kerja_id" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition">
+                                        <option value="">-- Pilih Atasan --</option>
+                                        @foreach($picUsers->groupBy(fn($item) => $item->unitKerja->name ?? 'Admin / Pusat') as $unitName => $users)
+                                            <optgroup label="UNIT: {{ strtoupper($unitName) }}">
+                                                @foreach($users as $pic)
+                                                    <option value="{{ $pic->id }}" {{ old('pic_unit_kerja_id', $user->pic_unit_kerja_id) == $pic->id ? 'selected' : '' }}>
+                                                        {{ $pic->name }} ({{ $pic->badge }})
+                                                    </option>
+                                                @endforeach
+                                            </optgroup>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Section 4: Status --}}
+                        <div class="bg-slate-50 rounded-2xl p-5 border border-slate-100">
+                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Status Akun</label>
+                            <div class="flex gap-6">
+                                <label class="flex items-center cursor-pointer">
+                                    <input type="radio" name="status" value="active" {{ old('status', $user->status) == 'active' ? 'checked' : '' }} 
+                                           class="w-4 h-4 text-indigo-600 border-slate-300 focus:ring-indigo-500">
+                                    <span class="ml-2 text-xs font-bold text-slate-600">Aktif</span>
+                                </label>
+                                <label class="flex items-center cursor-pointer">
+                                    <input type="radio" name="status" value="inactive" {{ old('status', $user->status) == 'inactive' ? 'checked' : '' }} 
+                                           class="w-4 h-4 text-rose-600 border-slate-300 focus:ring-rose-500">
+                                    <span class="ml-2 text-xs font-bold text-slate-600">Nonaktif</span>
+                                </label>
+                            </div>
                         </div>
                     </div>
-                </div>
-                
-                {{-- Footer: Buttons --}}
-                <div class="p-8 bg-slate-50 border-t border-slate-100 flex justify-end gap-3">
-                    <a href="{{ route('users.index') }}" class="px-6 py-3 bg-white border border-slate-200 text-slate-600 rounded-2xl text-sm font-bold hover:bg-slate-100 transition">
-                        Batal
-                    </a>
-                    <button type="submit" class="px-8 py-3 bg-slate-900 text-white rounded-2xl text-sm font-black uppercase tracking-widest hover:bg-slate-800 shadow-lg shadow-slate-200 transition active:scale-95">
-                        Update Data User
-                    </button>
-                </div>
-            </form>
+                    
+                    {{-- Footer: Buttons --}}
+                    <div class="px-8 py-6 bg-slate-50/80 border-t border-slate-100 flex justify-end gap-3">
+                        <a href="{{ route('users.index') }}" class="px-6 py-3 bg-white border border-slate-200 text-slate-600 rounded-xl text-xs font-bold hover:bg-slate-50 transition">
+                            Batal
+                        </a>
+                        <button type="submit" class="px-8 py-3 bg-gradient-to-r from-indigo-600 to-sky-600 text-white rounded-xl text-xs font-black uppercase tracking-wider hover:from-indigo-700 hover:to-sky-700 shadow-lg shadow-indigo-200 transition-all active:scale-95">
+                            Update Data User
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 </x-app-layout>

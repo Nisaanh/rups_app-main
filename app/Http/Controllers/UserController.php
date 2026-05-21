@@ -46,7 +46,7 @@ class UserController extends Controller
                 return $query->where('status', $status);
             })
             ->latest()
-            ->paginate(15);
+            ->paginate(10);
 
         // Get data for filters
         $roles = Role::orderBy('name')->get();

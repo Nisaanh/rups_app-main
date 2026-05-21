@@ -113,7 +113,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // --- Approval System ---
     Route::prefix('approval')->name('approval.')->group(function () {
         Route::get('/', [ApprovalController::class, 'index'])->name('index');
-        Route::get('/{tindaklanjut}', [ApprovalController::class, 'show'])->name('show'); // Tambahkan ini
+        Route::get('/{tindaklanjut}', [ApprovalController::class, 'show'])->name('show'); 
         Route::post('/{tindaklanjut}/approve', [ApprovalController::class, 'approve'])->name('approve');
         Route::post('/{tindaklanjut}/reject', [ApprovalController::class, 'reject'])->name('reject');
         

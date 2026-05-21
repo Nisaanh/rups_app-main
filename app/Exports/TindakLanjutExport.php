@@ -42,7 +42,6 @@ class TindakLanjutExport implements FromCollection, WithHeadings, WithMapping, W
                 'Status',
                 'Progress Stage',
                 'Dibuat Oleh',
-                'Role Pembuat',
                 'Tanggal Input',
                 'Catatan Approver Terakhir',
             ];
@@ -85,16 +84,31 @@ class TindakLanjutExport implements FromCollection, WithHeadings, WithMapping, W
             'rejected'    => 'Revisi / TD',
         ];
 
-        $approvedStages = $tl->approvals->where('status', 'approved')->count();
-        $status = $statusLabel[$tl->status] ?? $tl->status;
-        $periodelaporan = $tl->periode_bulan . '/' . $tl->periode_tahun;
-        $strategi = $tl->arahan->strategi ?? '-';
-        $unitKerja = $tl->unitKerja->name ?? '-';
-        $periode = $tl->arahan->keputusan->periode_year ?? '-';
-        $createdBy = $tl->creator->name ?? '-';
-        $roleCreator = $tl->creator->getRoleNames()->first() ?? '-';
-        $tanggalInput = $tl->created_at->format('d/m/Y H:i');
-        $lastNote = $tl->approvals->whereNotNull('note')->sortByDesc('updated_at')->first();
+        $stageRoles = [
+            1 => 'Tim Monitoring',
+            2 => 'Atasan Auditi',
+            3 => 'Pengendali Teknis',
+            4 => 'Pengendali Mutu',
+            5 => 'Penanggung Jawab',
+        ];
+
+        $lastApprovedStage = $tl->approvals
+            ->where('status', 'approved')
+            ->sortByDesc('stage')
+            ->first();
+
+        $progressStage  = $lastApprovedStage
+            ? ($stageRoles[$lastApprovedStage->stage] ?? '-')
+            : '-';
+
+        $status          = $statusLabel[$tl->status] ?? $tl->status;
+        $periodelaporan  = $tl->periode_bulan . '/' . $tl->periode_tahun;
+        $strategi        = $tl->arahan->strategi ?? '-';
+        $unitKerja       = $tl->unitKerja->name ?? '-';
+        $periode         = $tl->arahan->keputusan->periode_year ?? '-';
+        $createdBy       = $tl->creator->name ?? '-';
+        $tanggalInput    = $tl->created_at->format('d/m/Y H:i');
+        $lastNote        = $tl->approvals->whereNotNull('note')->sortByDesc('updated_at')->first();
         $catatanApprover = $lastNote->note ?? '-';
 
         if ($this->isAdmin) {
@@ -108,9 +122,8 @@ class TindakLanjutExport implements FromCollection, WithHeadings, WithMapping, W
                 $tl->kendala ?? '-',
                 $tl->keterangan ?? '-',
                 $status,
-                "Stage {$approvedStages}/5",
+                $progressStage,
                 $createdBy,
-                $roleCreator,
                 $tanggalInput,
                 $catatanApprover,
             ];

@@ -52,9 +52,9 @@ class TindakLanjutController extends Controller
         $stats = [
             'total'       => (clone $query)->count(),
             'pending'     => (clone $query)->whereDoesntHave('tindakLanjut')->count(),
-           'in_approval' => (clone $query)->whereHas('tindakLanjut', function($q) {
-                        $q->whereIn('status', ['pending', 'in_approval']);
-                    })->count(),
+            'in_approval' => (clone $query)->whereHas('tindakLanjut', function ($q) {
+                $q->whereIn('status', ['pending', 'in_approval']);
+            })->count(),
             'approved'    => (clone $tlQuery)->where('status', 'approved')->count(),
             'revisi'      => $revisiCount,
             'td'          => $tdCount, // Tambahkan statistik TD
@@ -64,71 +64,71 @@ class TindakLanjutController extends Controller
     }
 
     public function create(Request $request)
-{
-    abort_if(!auth()->user()->can('create_tindak_lanjut'), 403);
+    {
+        abort_if(!auth()->user()->can('create_tindak_lanjut'), 403);
 
-    /** @var User $user */
-    $user = Auth::user();
-    $selectedArahanId = $request->get('arahan_id');
+        /** @var User $user */
+        $user = Auth::user();
+        $selectedArahanId = $request->get('arahan_id');
 
-    $query = Arahan::query();
+        $query = Arahan::query();
 
-    // HANYA Auditi dan Atasan Auditi yang dibatasi
-    if ($user->hasRole(['Auditi', 'Atasan Auditi'])) {
-        $query->whereHas('pics', fn($q) => $q->where('users.id', $user->id));
-    }
-
-    $arahanList = $query->with(['keputusan', 'pics', 'bidang'])->latest()->get();
-
-    // === TAMBAHKAN INI: Ambil data arahan yang dipilih ===
-    $selectedArahan = null;
-    if ($selectedArahanId) {
-        $selectedArahan = $arahanList->firstWhere('id', $selectedArahanId);
-        
-        // Jika tidak ditemukan di $arahanList, cari langsung ke database
-        if (!$selectedArahan) {
-            $selectedArahan = Arahan::with(['keputusan', 'pics', 'bidang'])->find($selectedArahanId);
-        }
-    }
-    // ================================================
-
-    // Unit kerja yang bisa dipilih
-    if ($user->hasRole(['Auditi', 'Atasan Auditi'])) {
-        // Auditi & Atasan Auditi hanya bisa pilih unit kerjanya sendiri
-        $unitKerja = collect([$user->unitKerja])->filter();
-    } else {
-        // Role lain bisa pilih semua unit kerja
-        $unitKerja = \App\Models\UnitKerja::orderBy('name')->get();
-    }
-
-    $historiTindakLanjut = collect();
-    if ($selectedArahanId) {
-        $historiTindakLanjut = TindakLanjut::where('arahan_id', $selectedArahanId)
-            ->with(['creator', 'unitKerja', 'approvals'])
-            ->latest()
-            ->get();
-
-        // Filter histori berdasarkan unit kerja user (khusus Auditi & Atasan Auditi)
+        // HANYA Auditi dan Atasan Auditi yang dibatasi
         if ($user->hasRole(['Auditi', 'Atasan Auditi'])) {
-            $historiTindakLanjut = $historiTindakLanjut->filter(function ($tl) use ($user) {
-                return $tl->unit_kerja_id == $user->unit_kerja_id;
-            });
+            $query->whereHas('pics', fn($q) => $q->where('users.id', $user->id));
         }
-    }
 
-    if ($arahanList->isEmpty()) {
-        return redirect()->route('tindaklanjut.index')
-            ->with('info', 'Tidak ada arahan yang tersedia untuk Anda.');
-    }
+        $arahanList = $query->with(['keputusan', 'pics', 'bidang'])->latest()->get();
 
-    return view('tindaklanjut.create', compact(
-        'arahanList',
-        'selectedArahanId',
-        'selectedArahan', // <-- TAMBAHKAN INI
-        'historiTindakLanjut',
-        'unitKerja'
-    ));
-}
+        // === TAMBAHKAN INI: Ambil data arahan yang dipilih ===
+        $selectedArahan = null;
+        if ($selectedArahanId) {
+            $selectedArahan = $arahanList->firstWhere('id', $selectedArahanId);
+
+            // Jika tidak ditemukan di $arahanList, cari langsung ke database
+            if (!$selectedArahan) {
+                $selectedArahan = Arahan::with(['keputusan', 'pics', 'bidang'])->find($selectedArahanId);
+            }
+        }
+        // ================================================
+
+        // Unit kerja yang bisa dipilih
+        if ($user->hasRole(['Auditi', 'Atasan Auditi'])) {
+            // Auditi & Atasan Auditi hanya bisa pilih unit kerjanya sendiri
+            $unitKerja = collect([$user->unitKerja])->filter();
+        } else {
+            // Role lain bisa pilih semua unit kerja
+            $unitKerja = \App\Models\UnitKerja::orderBy('name')->get();
+        }
+
+        $historiTindakLanjut = collect();
+        if ($selectedArahanId) {
+            $historiTindakLanjut = TindakLanjut::where('arahan_id', $selectedArahanId)
+                ->with(['creator', 'unitKerja', 'approvals'])
+                ->latest()
+                ->get();
+
+            // Filter histori berdasarkan unit kerja user (khusus Auditi & Atasan Auditi)
+            if ($user->hasRole(['Auditi', 'Atasan Auditi'])) {
+                $historiTindakLanjut = $historiTindakLanjut->filter(function ($tl) use ($user) {
+                    return $tl->unit_kerja_id == $user->unit_kerja_id;
+                });
+            }
+        }
+
+        if ($arahanList->isEmpty()) {
+            return redirect()->route('tindaklanjut.index')
+                ->with('info', 'Tidak ada arahan yang tersedia untuk Anda.');
+        }
+
+        return view('tindaklanjut.create', compact(
+            'arahanList',
+            'selectedArahanId',
+            'selectedArahan', // <-- TAMBAHKAN INI
+            'historiTindakLanjut',
+            'unitKerja'
+        ));
+    }
 
     public function store(TindakLanjutRequest $request)
     {
@@ -152,7 +152,7 @@ class TindakLanjutController extends Controller
                 'status'           => 'pending'
             ]);
 
-       
+
 
             DB::commit();
 
@@ -169,36 +169,53 @@ class TindakLanjutController extends Controller
         }
     }
 
-    public function showArahan($id)
+   public function showArahan($id)
 {
     $user = Auth::user();
 
     $arahan = Arahan::with([
-        'keputusan', 
+        'keputusan',
         'tindakLanjut' => function($q) {
-            $q->orderBy('created_at', 'desc'); // pastikan urutan desc
+            $q->orderBy('created_at', 'desc');
         },
-        'tindakLanjut.creator', 
-        'tindakLanjut.unitKerja', 
-        'tindakLanjut.approvals.approver', 
-        'pics', 
+        'tindakLanjut.creator',
+        'tindakLanjut.unitKerja',
+        'tindakLanjut.approvals.approver',
+        'pics',
         'bidang'
     ])->findOrFail($id);
 
-    $isPIC = $arahan->pics->contains('id', $user->id);
+    $isPIC        = $arahan->pics->contains('id', $user->id);
     $hasFullAccess = !$user->hasRole(['Auditi', 'Atasan Auditi']);
 
-    if (!$hasFullAccess && !$isPIC) {
+    $isAtasanWithAccess = false;
+    if ($user->hasRole('Atasan Auditi')) {
+        $subordinateUnitIds = User::where('pic_unit_kerja_id', $user->id)
+            ->whereNotNull('unit_kerja_id')
+            ->pluck('unit_kerja_id')
+            ->push($user->unit_kerja_id)
+            ->unique()
+            ->toArray();
+
+        $isAtasanWithAccess = $arahan->tindakLanjut
+            ->whereIn('unit_kerja_id', $subordinateUnitIds)
+            ->isNotEmpty() || $isPIC;
+    }
+
+    if (!$hasFullAccess && !$isPIC && !$isAtasanWithAccess) {
         abort(403, 'Anda tidak memiliki akses untuk melihat arahan ini.');
     }
 
-    if ($user->hasRole(['Auditi', 'Atasan Auditi'])) {
+    if ($user->hasRole('Atasan Auditi')) {
+        $arahan->tindakLanjut = $arahan->tindakLanjut->filter(function ($tl) use ($subordinateUnitIds) {
+            return in_array($tl->unit_kerja_id, $subordinateUnitIds);
+        });
+    } elseif ($user->hasRole('Auditi')) {
         $arahan->tindakLanjut = $arahan->tindakLanjut->filter(function ($tl) use ($user) {
             return $tl->unit_kerja_id == $user->unit_kerja_id;
         });
     }
 
-    // Group by unit, lalu ambil yang TERBARU per unit
     $tlPerUnit = $arahan->tindakLanjut
         ->groupBy('unit_kerja_id')
         ->map(function($tlList) {
@@ -293,8 +310,8 @@ class TindakLanjutController extends Controller
                 'status'           => 'pending'
             ]);
 
-        // NOTIFIKASI KE ATASAN AUDITI
-           
+            // NOTIFIKASI KE ATASAN AUDITI
+
 
             return redirect()->route('tindaklanjut.show_arahan', $tindaklanjut->arahan_id)
                 ->with('success', 'Tindak lanjut berhasil diperbarui dan dikembalikan ke antrian Approval Stage 1.');

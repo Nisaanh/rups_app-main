@@ -177,12 +177,8 @@
 
     @push('scripts')
     <script>
-        const picData = @json($picByUnit);
-        const currentPicId = {
-            {
-                $arahan - > pic_unit_kerja_id ?? 'null'
-            }
-        };
+       const picData = JSON.parse('{!! addslashes(json_encode($picByUnit)) !!}');
+       const currentPicId = {{ $arahan->pic_unit_kerja_id ?? 'null' }};
 
         function updatePIC(selectedPicId = null) {
             const unitId = document.getElementById('unitKerjaSelect').value;
